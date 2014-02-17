@@ -1,0 +1,43 @@
+body {
+    margin: 0;
+}
+
+#directory-tree {
+    float: left;
+    height: 100%;
+    width: 25%;
+    overflow: scroll;
+}
+
+#directory-tree pre {
+    margin: 2px;
+}
+
+#directory-tree ul, #directory-tree li {
+    list-style-type: none;    
+    padding: 0;
+    margin: 0;
+}
+
+#directory-tree ul ul, #directory-tree li {
+    padding: 0 0 0 8px
+}
+
+.tree-icon {
+    width: 15px;
+    height: 15px;
+    background-size:100% 100%;
+    float:left
+}
+
+.icon-expand-directory {
+    background-image: url("../img/expand-folder.png");
+}
+
+.icon-contract-directory {
+    background-image: url("../img/contract-folder.png");
+}
+
+.icon-file {
+    background-image: url("../img/file.png");
+}

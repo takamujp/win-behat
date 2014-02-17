@@ -1,0 +1,27 @@
+{
+  "name": "win-behat",
+  "main": "build/index.html",
+  "nodejs": true,
+  "window": {
+    "title": "win-behat",
+    "icon": "",
+    "toolbar": true,
+    "frame": true,
+    "width": 800,
+    "height": 500,
+    "position": "mouse",
+    "min_width": 800,
+    "min_height": 500
+  },
+  "single-instance": true,
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-bower-task": "~0.3.4",
+    "grunt-contrib-uglify": "~0.3.2",
+    "grunt-contrib-concat": "~0.3.0",
+    "grunt-ngmin": "0.0.3",
+    "grunt-contrib-watch": "~0.5.3",
+    "grunt-contrib-copy": "~0.5.0",
+    "grunt-contrib-clean": "~0.5.0"
+  }
+}

@@ -1,0 +1,35 @@
+<html ng-app='winbehat' >
+    <head>
+        <link rel="stylesheet" type="text/css" href="js/lib/codemirror/codemirror.css">
+        <link rel="stylesheet" type="text/css" href="css/app.css">
+        <script src="./js/lib/codemirror/codemirror.js"></script>
+        <script src="./js/lib/angular/angular.js"></script>
+        <script src="./js/lib/angular-route/angular-route.js"></script>
+        <script src="./js/lib/angular-ui-codemirror/ui-codemirror.js"></script>
+    </head>
+    <meta charset="utf-8">
+    <body>
+        <div id="directory-tree" ng-controller="directoryTreeController">
+            <div>
+                <input type="file" nwdirectory onchange="angular.element(this).scope().openDirectory(this);" />
+            </div>
+            <div ng-if="hasFilelist">
+                <dirctory-tree-node file="filelist"></dirctory-tree-node>
+            </div>
+        </div>
+        <div ng-controller="testController">
+            <div>
+                <input type="text" ng-model="initTarget"><button ng-click="initBehat()">初期化</button>
+            </div>
+            <div>
+                <input type="text" ng-model="runTarget"><button ng-click="runBehat()">実行</button>
+            </div>
+            <div>
+                {{result}}
+            </div>
+        </div>
+    </body>
+    
+    <script src="./js/win-behat.js"></script>
+    <!--<script src="./js/win-behat.min.js"></script>-->
+</html>
