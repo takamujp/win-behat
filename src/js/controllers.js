@@ -54,26 +54,20 @@ angular.module('winbehat').controller('directoryTreeController', [
       };
     };
   }
-]);angular.module('winbehat').controller('testController', [
+]);angular.module('winbehat').controller('textEditorController', [
   '$scope',
-  'behatService',
-  function ($scope, behatService) {
-    $scope.initTarget = 'init';
-    $scope.runTarget = 'run';
-    $scope.result = 'ret';
-    $scope.initBehat = function () {
-      behatService.init($scope.initTarget, function (err, stdout, stderr) {
-        $scope.$apply(function () {
-          $scope.result = err + ' ' + stdout;
-        });
-      });
-    };
-    $scope.runBehat = function () {
-      behatService.run($scope.runTarget, '.', function (err, stdout, stderr) {
-        $scope.$apply(function () {
-          $scope.result = err + ' ' + stdout;
-        });
-      });
+  function ($scope) {
+    $scope.editorOptions = {
+      lineWrapping: true,
+      lineNumbers: true,
+      indentUnit: 4,
+      indentWithTabs: false,
+      extraKeys: {
+        Tab: function (cm) {
+          var spaces = Array(cm.getOption('indentUnit') + 1).join(' ');
+          cm.replaceSelection(spaces, 'end', '+input');
+        }
+      }
     };
   }
 ]);
