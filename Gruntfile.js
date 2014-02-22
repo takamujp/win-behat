@@ -5,7 +5,7 @@ module.exports = function (grunt) {
             install: {
                 options: {
                     targetDir: './src/js/lib',
-                    layout: 'byType',
+                    layout: 'byComponent',
                     install: true,
                     verbose: false,
                     cleanTargetDir: true,
@@ -145,5 +145,5 @@ module.exports = function (grunt) {
         }
     });
 
-    grunt.registerTask('build', ['clean:build', 'ngmin', 'concat', 'uglify', 'copy']);
+    grunt.registerTask('build', ['clean:build', 'bower:install', 'ngmin', 'concat', 'uglify', 'copy']);
 };
