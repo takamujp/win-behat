@@ -98,12 +98,6 @@ function ReadFileListSync (base_dir, recursive) {
 }
 
 function SortFileList (a, b) {
-//    if ((a.children && b.children) || (!a.children && !b.children)) {
-//        return a.name > b.name;
-//    } else {
-//        return !!a.children < !!b.children;
-//    }
-
     if ((a.isDirectory && b.isDirectory) || (!a.isDirectory && !b.isDirectory)) {
         return (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : -1;
     } else {

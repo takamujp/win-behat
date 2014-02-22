@@ -85,7 +85,7 @@ module.exports = function (grunt) {
                 }
             },
             resource: {
-                files: ['src/template/**', 'src/js/lib/**', 'src/js/my-modules/**', 'src/index.html', 'src/css/**'],
+                files: ['src/template/**', 'src/js/my-modules/**', 'src/index.html', 'src/css/**'],
                 tasks: ['copy:build'],
                 options: {
                     debounceDelay: 100,
