@@ -12,7 +12,6 @@ angular.module('winbehat').directive("resizeCodeMirror", function ($window) {
         
         $scope.$watchCollection('editFilelist', function () {
             $scope.initializeWindowSize();
-            return $scope.$apply();
         });
         
         angular.element($window).bind('resize', function () {

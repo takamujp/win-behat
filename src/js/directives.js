@@ -35,7 +35,6 @@ angular.module('winbehat').directive('dirctoryTreeNode', [
       $scope.initializeWindowSize();
       $scope.$watchCollection('editFilelist', function () {
         $scope.initializeWindowSize();
-        return $scope.$apply();
       });
       angular.element($window).bind('resize', function () {
         $scope.initializeWindowSize();
