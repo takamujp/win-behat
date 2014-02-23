@@ -1,8 +1,14 @@
 
-angular.module('winbehat').controller('directoryTreeController', function ($scope, filelistService) {
+angular.module('winbehat').controller('directoryTreeController', function ($scope, filelistService, editFilelistService) {
     $scope.filelist = {};
+    $scope.editFilelist = editFilelistService.list;
     $scope.hasFilelist = false;
 
+    /**
+     * ディレクトリの階層情報を読み込む
+     * 
+     * @param {object} element
+     */
     $scope.openDirectory = function (element) {
         
         if (!element.files[0]) {
@@ -42,8 +48,8 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                     });
                 });
             }
-        } else {
-            
+        } else { // ファイルならエディタを開く
+            editFilelistService.push(element.item.name);
         }
     };
     

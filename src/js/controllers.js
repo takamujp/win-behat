@@ -1,9 +1,16 @@
 angular.module('winbehat').controller('directoryTreeController', [
   '$scope',
   'filelistService',
-  function ($scope, filelistService) {
+  'editFilelistService',
+  function ($scope, filelistService, editFilelistService) {
     $scope.filelist = {};
+    $scope.editFilelist = editFilelistService.list;
     $scope.hasFilelist = false;
+    /**
+     * ディレクトリの階層情報を読み込む
+     * 
+     * @param {object} element
+     */
     $scope.openDirectory = function (element) {
       if (!element.files[0]) {
         return;
@@ -40,6 +47,8 @@ angular.module('winbehat').controller('directoryTreeController', [
           });
         }
       } else {
+        // ファイルならエディタを開く
+        editFilelistService.push(element.item.name);
       }
     };
     /**
@@ -60,7 +69,9 @@ angular.module('winbehat').controller('directoryTreeController', [
 ]);angular.module('winbehat').controller('textEditorController', [
   '$scope',
   'codeMirrorService',
-  function ($scope, codeMirrorService) {
+  'editFilelistService',
+  function ($scope, codeMirrorService, editFilelistService) {
+    $scope.editFilelist = editFilelistService.list;
     $scope.editorOptions = {
       lineWrapping: true,
       lineNumbers: true,
@@ -78,6 +89,9 @@ angular.module('winbehat').controller('directoryTreeController', [
         'Tab': codeMirrorService.insertTab,
         'Ctrl-Space': codeMirrorService.autocomplete
       }
+    };
+    $scope.select = function (file) {
+      editFilelistService.select(file);
     };
   }
 ]);

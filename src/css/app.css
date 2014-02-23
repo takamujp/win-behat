@@ -1,11 +1,12 @@
 body {
     margin: 0;
+    overflow: hidden;
 }
 
 #directory-tree {
     float: left;
     height: 100%;
-    width: 25%;
+    width: 240px;
     overflow: scroll;
 }
 
@@ -22,6 +23,11 @@ body {
 
 #directory-tree ul ul, #directory-tree li {
     padding: 0 0 0 8px
+}
+
+#editor-area {
+    position: absolute; 
+    left: 240px; 
 }
 
 .tree-icon {
@@ -41,4 +47,13 @@ body {
 
 .icon-file {
     background-image: url("../img/file.png");
+}
+
+
+.CodeMirror {
+  border: 1px solid #eee;
+/*  height: auto;*/
+}
+.CodeMirror-scroll {
+  overflow-x: scroll;
 }

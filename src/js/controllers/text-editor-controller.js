@@ -1,7 +1,7 @@
 
 
-angular.module('winbehat').controller('textEditorController', function ($scope, codeMirrorService) {
-    
+angular.module('winbehat').controller('textEditorController', function ($scope, codeMirrorService, editFilelistService) {
+    $scope.editFilelist = editFilelistService.list;
     $scope.editorOptions = {
         lineWrapping: true,
         lineNumbers: true,
@@ -19,5 +19,9 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
             'Tab': codeMirrorService.insertTab,
             'Ctrl-Space': codeMirrorService.autocomplete
         }
+    };
+    
+    $scope.select = function (file) {
+        editFilelistService.select(file);
     };
 });

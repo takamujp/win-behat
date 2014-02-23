@@ -47,11 +47,18 @@
                 <dirctory-tree-node file="filelist"></dirctory-tree-node>
             </div>
         </div>
-        <div ng-controller="textEditorController">
-            <textarea ui-codemirror="editorOptions" ng-model="x"></textarea>
+        <div id='editor-area' ng-controller="textEditorController">
+            <div class="tabbable"> 
+                <ul id="editor-tabs" class="nav nav-tabs"> 
+                    <li ng-repeat="file in editFilelist" ng-class="{active:file.isSelected}">
+                        <a href="" ng-click="select(file)">{{file.name}}</a> 
+                    </li> 
+                </ul> 
+                <div class="tab-content"><textarea ui-codemirror="editorOptions" ng-model="x" resize-code-mirror style="height: {{windowHeight}}px; width: {{windowWidth-240}}px"></textarea></div> 
+            </div>
         </div>
     </body>
-    
+
     <script src="./js/win-behat.js"></script>
     <!--<script src="./js/win-behat.min.js"></script>-->
 </html>

@@ -145,5 +145,6 @@ module.exports = function (grunt) {
         }
     });
 
+    grunt.registerTask('quickBuild', ['clean:build', 'ngmin', 'concat', 'uglify', 'copy']);
     grunt.registerTask('build', ['clean:build', 'bower:install', 'ngmin', 'concat', 'uglify', 'copy']);
 };
