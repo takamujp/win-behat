@@ -11,6 +11,7 @@ body {
 
 #directory-tree pre {
     margin: 2px;
+    padding: 0;
 }
 
 #directory-tree ul, #directory-tree li {
