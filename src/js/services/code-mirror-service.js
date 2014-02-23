@@ -3,6 +3,11 @@ angular.module('winbehat').factory('codeMirrorService', function () {
     
     var fxl = require('./js/my-modules/filename-extension-list');
     
+    /**
+     * タブを挿入する
+     * 
+     * @param {CodeMirror} cm
+     */
     var insertTab = function (cm) {
         var indent_unit = cm.getOption('indentUnit'),
             spaces = '',
@@ -35,12 +40,23 @@ angular.module('winbehat').factory('codeMirrorService', function () {
         }
     };
     
+    /**
+     * 入力補完機能
+     * 
+     * @param {CodeMirror} cm
+     */
     var autocomplete = function (cm) {
         CodeMirror.showHint(cm, cm.getHelper(cm.getCursor(), 'hint') || CodeMirror.hint.anyword);
     };
     
     CodeMirror.modeURL = 'js/lib/codemirror/mode/%N/%N.js';
     
+    /**
+     * CodeMirrorのmodeを切り替える
+     * 
+     * @param {CodeMirror} cm
+     * @param {string} ext 拡張子
+     */
     var changeMode = function (cm, ext) {
         CodeMirror.autoLoadMode(cm, fxl[ext]);
         cm.setOption("mode", fxl[ext]);

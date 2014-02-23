@@ -73,10 +73,7 @@ angular.module('winbehat').controller('directoryTreeController', [
       extraKeys: {
         'Ctrl-/': 'toggleComment',
         'Tab': codeMirrorService.insertTab,
-        'Ctrl-Space': codeMirrorService.autocomplete,
-        'Ctrl-S': function (cm) {
-          codeMirrorService.changeMode(cm, 'yml');
-        }
+        'Ctrl-Space': codeMirrorService.autocomplete
       }
     };
   }
