@@ -21,7 +21,21 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
         }
     };
     
+    /**
+     * タブ選択
+     * 
+     * @param {object} file
+     */
     $scope.select = function (file) {
         editFilelistService.select(file);
+    };
+    
+    /**
+     * ファイルを閉じる
+     * 
+     * @param {number} $index
+     */
+    $scope.remove = function ($index) {
+        editFilelistService.remove($index);
     };
 });

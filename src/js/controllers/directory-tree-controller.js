@@ -1,7 +1,6 @@
 
 angular.module('winbehat').controller('directoryTreeController', function ($scope, filelistService, editFilelistService) {
     $scope.filelist = {};
-    $scope.editFilelist = editFilelistService.list;
     $scope.hasFilelist = false;
 
     /**

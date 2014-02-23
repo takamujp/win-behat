@@ -4,7 +4,6 @@ angular.module('winbehat', ['ui.codemirror']);;angular.module('winbehat').contro
   'editFilelistService',
   function ($scope, filelistService, editFilelistService) {
     $scope.filelist = {};
-    $scope.editFilelist = editFilelistService.list;
     $scope.hasFilelist = false;
     /**
      * ディレクトリの階層情報を読み込む
@@ -90,8 +89,21 @@ angular.module('winbehat', ['ui.codemirror']);;angular.module('winbehat').contro
         'Ctrl-Space': codeMirrorService.autocomplete
       }
     };
+    /**
+     * タブ選択
+     * 
+     * @param {object} file
+     */
     $scope.select = function (file) {
       editFilelistService.select(file);
+    };
+    /**
+     * ファイルを閉じる
+     * 
+     * @param {number} $index
+     */
+    $scope.remove = function ($index) {
+      editFilelistService.remove($index);
     };
   }
 ]);;angular.module('winbehat').directive('dirctoryTreeNode', [
@@ -131,7 +143,6 @@ angular.module('winbehat', ['ui.codemirror']);;angular.module('winbehat').contro
       $scope.initializeWindowSize();
       $scope.$watchCollection('editFilelist', function () {
         $scope.initializeWindowSize();
-        return $scope.$apply();
       });
       angular.element($window).bind('resize', function () {
         $scope.initializeWindowSize();
@@ -218,6 +229,9 @@ angular.module('winbehat', ['ui.codemirror']);;angular.module('winbehat').contro
       });
     }
   };
+  var remove = function (id) {
+    list.splice(id, 1);
+  };
   var select = function (editFile) {
     angular.forEach(list, function (file) {
       file.isSelected = false;
@@ -229,6 +243,7 @@ angular.module('winbehat', ['ui.codemirror']);;angular.module('winbehat').contro
   return {
     list: list,
     push: push,
+    remove: remove,
     select: select
   };
 });angular.module('winbehat').factory('filelistService', function () {

@@ -1,5 +1,6 @@
-<html ng-app='winbehat' >
+<html ng-app='winbehat' lang="ja">
     <head>
+        <meta charset="utf-8">
         <link rel="stylesheet" type="text/css" href="js/lib/bootstrap/bootstrap.css">
         <link rel="stylesheet" type="text/css" href="js/lib/codemirror/codemirror.css">
         <link rel="stylesheet" type="text/css" href="js/lib/codemirror/addon/dialog/dialog.css">
@@ -37,7 +38,6 @@
         <script src="./js/lib/codemirror/mode/clike/clike.js"></script>
         <script src="./js/lib/codemirror/mode/php/php.js"></script>
     </head>
-    <meta charset="utf-8">
     <body>
         <div id="directory-tree" ng-controller="directoryTreeController">
             <div>
@@ -51,7 +51,7 @@
             <div class="tabbable"> 
                 <ul id="editor-tabs" class="nav nav-tabs"> 
                     <li ng-repeat="file in editFilelist" ng-class="{active:file.isSelected}">
-                        <a href="" ng-click="select(file)">{{file.name}}</a> 
+                        <a ng-click="select(file)">{{file.name}}<button class="close" title="閉じる" type="submit" ng-click="remove($index)">x</button></a> 
                     </li> 
                 </ul> 
                 <div class="tab-content"><textarea ui-codemirror="editorOptions" ng-model="x" resize-code-mirror style="height: {{windowHeight}}px; width: {{windowWidth-240}}px"></textarea></div> 

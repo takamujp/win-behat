@@ -4,7 +4,6 @@ angular.module('winbehat').controller('directoryTreeController', [
   'editFilelistService',
   function ($scope, filelistService, editFilelistService) {
     $scope.filelist = {};
-    $scope.editFilelist = editFilelistService.list;
     $scope.hasFilelist = false;
     /**
      * ディレクトリの階層情報を読み込む
@@ -90,8 +89,21 @@ angular.module('winbehat').controller('directoryTreeController', [
         'Ctrl-Space': codeMirrorService.autocomplete
       }
     };
+    /**
+     * タブ選択
+     * 
+     * @param {object} file
+     */
     $scope.select = function (file) {
       editFilelistService.select(file);
+    };
+    /**
+     * ファイルを閉じる
+     * 
+     * @param {number} $index
+     */
+    $scope.remove = function ($index) {
+      editFilelistService.remove($index);
     };
   }
 ]);

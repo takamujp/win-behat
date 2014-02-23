@@ -25,6 +25,10 @@ angular.module('winbehat').factory('editFilelistService', function () {
         }
     };
     
+    var remove = function (id) {
+      list.splice(id, 1);   
+    };
+    
     var select = function (editFile) {
         angular.forEach(list, function (file) {
             file.isSelected = false;
@@ -38,6 +42,7 @@ angular.module('winbehat').factory('editFilelistService', function () {
     return {
         list: list,
         push: push,
+        remove: remove,
         select: select
     };
 });
