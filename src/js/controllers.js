@@ -5,6 +5,9 @@ angular.module('winbehat').controller('directoryTreeController', [
     $scope.filelist = {};
     $scope.hasFilelist = false;
     $scope.openDirectory = function (element) {
+      if (!element.files[0]) {
+        return;
+      }
       filelistService.read(element.files[0].path, function (filelist) {
         $scope.$apply(function () {
           if (filelist) {
