@@ -27,9 +27,9 @@ angular.module('winbehat').controller('directoryTreeController', [
      * ツリーの要素をクリックした時の動作
      * 
      * @param {object} element
-     * @param {number} id
+     * @param {number} index
      */
-    $scope.clickNode = function (element, id) {
+    $scope.clickNode = function (element, index) {
       // ディレクトリなら表示を切り替える
       if (element.item.isDirectory) {
         if (element.item.isOpen) {
@@ -71,8 +71,8 @@ angular.module('winbehat').controller('directoryTreeController', [
   'editFilelistService',
   function ($scope, codeMirrorService, editFilelistService) {
     $scope.editFilelist = editFilelistService.list;
+    $scope.editFile = {};
     $scope.editorOptions = {
-      lineWrapping: true,
       lineNumbers: true,
       indentUnit: 4,
       indentWithTabs: false,
@@ -89,21 +89,28 @@ angular.module('winbehat').controller('directoryTreeController', [
         'Ctrl-Space': codeMirrorService.autocomplete
       }
     };
+    $scope.$watchCollection('editFilelist', function (list) {
+      var len = list.length;
+      if (len) {
+        $scope.select(len - 1);
+      }
+    });
     /**
      * タブ選択
      * 
-     * @param {object} file
+     * @param {number} index
      */
-    $scope.select = function (file) {
-      editFilelistService.select(file);
+    $scope.select = function (index) {
+      $scope.editFile = editFilelistService.select(index) || { text: '' };
     };
     /**
      * ファイルを閉じる
      * 
-     * @param {number} $index
+     * @param {number} index
      */
-    $scope.remove = function ($index) {
-      editFilelistService.remove($index);
+    $scope.remove = function (index) {
+      editFilelistService.remove(index);
+      $scope.select(index - 1);
     };
   }
 ]);

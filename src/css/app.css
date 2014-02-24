@@ -61,9 +61,9 @@ body {
 
 
 .CodeMirror {
-  border: 1px solid #eee;
-/*  height: auto;*/
+    border: 1px solid #eee;
+    height: auto;
 }
 .CodeMirror-scroll {
-  overflow-x: scroll;
+    overflow-x: scroll;
 }

@@ -57,36 +57,41 @@ angular.module('winbehat').factory('behatService', function () {
     'changeMode': changeMode
   };
 });angular.module('winbehat').factory('editFilelistService', function () {
-  var list = [];
+  var fs = require('fs'), list = [];
   var push = function (path) {
-    var notExist = true;
-    angular.forEach(list, function (file) {
-      if (file.path === path) {
-        file.isSelected = true;
+    var notExist = true, text = '', i = 0, len = list.length;
+    for (; i < len; i++) {
+      if (list[i].path === path) {
         notExist = false;
-      } else {
-        file.isSelected = false;
+        break;
       }
-    });
+    }
     if (notExist) {
+      text = fs.readFileSync(path).toString();
       list.push({
         path: path,
         name: path.split('\\').pop(),
-        isSelected: true,
-        lastText: ''
+        isSelected: false,
+        text: text,
+        lastText: text
       });
     }
   };
   var remove = function (id) {
-    list.splice(id, 1);
+    return list.splice(id, 1);
   };
-  var select = function (editFile) {
-    angular.forEach(list, function (file) {
-      file.isSelected = false;
-    });
-    if (editFile) {
-      editFile.isSelected = true;
+  var select = function (id) {
+    var i = 0, len = list.length;
+    if (id < 0) {
+      id = 0;
+    } else if (id >= len) {
+      id = len - 1;
     }
+    for (; i < len; i++) {
+      list[i].isSelected = false;
+    }
+    list[id] && (list[id].isSelected = true);
+    return list[id];
   };
   return {
     list: list,

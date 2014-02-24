@@ -27,9 +27,9 @@ angular.module('winbehat', ['ui.codemirror']);;angular.module('winbehat').contro
      * ツリーの要素をクリックした時の動作
      * 
      * @param {object} element
-     * @param {number} id
+     * @param {number} index
      */
-    $scope.clickNode = function (element, id) {
+    $scope.clickNode = function (element, index) {
       // ディレクトリなら表示を切り替える
       if (element.item.isDirectory) {
         if (element.item.isOpen) {
@@ -71,8 +71,8 @@ angular.module('winbehat', ['ui.codemirror']);;angular.module('winbehat').contro
   'editFilelistService',
   function ($scope, codeMirrorService, editFilelistService) {
     $scope.editFilelist = editFilelistService.list;
+    $scope.editFile = {};
     $scope.editorOptions = {
-      lineWrapping: true,
       lineNumbers: true,
       indentUnit: 4,
       indentWithTabs: false,
@@ -89,21 +89,28 @@ angular.module('winbehat', ['ui.codemirror']);;angular.module('winbehat').contro
         'Ctrl-Space': codeMirrorService.autocomplete
       }
     };
+    $scope.$watchCollection('editFilelist', function (list) {
+      var len = list.length;
+      if (len) {
+        $scope.select(len - 1);
+      }
+    });
     /**
      * タブ選択
      * 
-     * @param {object} file
+     * @param {number} index
      */
-    $scope.select = function (file) {
-      editFilelistService.select(file);
+    $scope.select = function (index) {
+      $scope.editFile = editFilelistService.select(index) || { text: '' };
     };
     /**
      * ファイルを閉じる
      * 
-     * @param {number} $index
+     * @param {number} index
      */
-    $scope.remove = function ($index) {
-      editFilelistService.remove($index);
+    $scope.remove = function (index) {
+      editFilelistService.remove(index);
+      $scope.select(index - 1);
     };
   }
 ]);;angular.module('winbehat').directive('dirctoryTreeNode', [
@@ -209,36 +216,41 @@ angular.module('winbehat', ['ui.codemirror']);;angular.module('winbehat').contro
     'changeMode': changeMode
   };
 });angular.module('winbehat').factory('editFilelistService', function () {
-  var list = [];
+  var fs = require('fs'), list = [];
   var push = function (path) {
-    var notExist = true;
-    angular.forEach(list, function (file) {
-      if (file.path === path) {
-        file.isSelected = true;
+    var notExist = true, text = '', i = 0, len = list.length;
+    for (; i < len; i++) {
+      if (list[i].path === path) {
         notExist = false;
-      } else {
-        file.isSelected = false;
+        break;
       }
-    });
+    }
     if (notExist) {
+      text = fs.readFileSync(path).toString();
       list.push({
         path: path,
         name: path.split('\\').pop(),
-        isSelected: true,
-        lastText: ''
+        isSelected: false,
+        text: text,
+        lastText: text
       });
     }
   };
   var remove = function (id) {
-    list.splice(id, 1);
+    return list.splice(id, 1);
   };
-  var select = function (editFile) {
-    angular.forEach(list, function (file) {
-      file.isSelected = false;
-    });
-    if (editFile) {
-      editFile.isSelected = true;
+  var select = function (id) {
+    var i = 0, len = list.length;
+    if (id < 0) {
+      id = 0;
+    } else if (id >= len) {
+      id = len - 1;
     }
+    for (; i < len; i++) {
+      list[i].isSelected = false;
+    }
+    list[id] && (list[id].isSelected = true);
+    return list[id];
   };
   return {
     list: list,

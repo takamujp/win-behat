@@ -28,9 +28,9 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
      * ツリーの要素をクリックした時の動作
      * 
      * @param {object} element
-     * @param {number} id
+     * @param {number} index
      */
-    $scope.clickNode = function (element, id) {
+    $scope.clickNode = function (element, index) {
         
         // ディレクトリなら表示を切り替える
         if (element.item.isDirectory) {

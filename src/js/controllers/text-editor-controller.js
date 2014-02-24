@@ -2,8 +2,8 @@
 
 angular.module('winbehat').controller('textEditorController', function ($scope, codeMirrorService, editFilelistService) {
     $scope.editFilelist = editFilelistService.list;
+    $scope.editFile = {};
     $scope.editorOptions = {
-        lineWrapping: true,
         lineNumbers: true,
         indentUnit: 4,
         indentWithTabs: false,
@@ -21,21 +21,29 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
         }
     };
     
+    $scope.$watchCollection('editFilelist', function (list) {
+        var len = list.length;
+        if (len) {
+            $scope.select(len - 1);
+        }
+    });
+    
     /**
      * タブ選択
      * 
-     * @param {object} file
+     * @param {number} index
      */
-    $scope.select = function (file) {
-        editFilelistService.select(file);
+    $scope.select = function (index) {
+        $scope.editFile = editFilelistService.select(index) || {text: ''};
     };
     
     /**
      * ファイルを閉じる
      * 
-     * @param {number} $index
+     * @param {number} index
      */
-    $scope.remove = function ($index) {
-        editFilelistService.remove($index);
+    $scope.remove = function (index) {
+        editFilelistService.remove(index);
+        $scope.select(index - 1);
     };
 });
