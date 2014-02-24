@@ -12,7 +12,13 @@ body {
 
 #directory-tree pre {
     margin: 2px;
-    padding: 0;
+    padding: 0 0 0 2px;
+    overflow: inherit;
+    white-space: nowrap;
+    display: -webkit-box;
+    color: none;
+    border: none;
+    background-color: rgba(0,0,0,0);
 }
 
 #directory-tree ul, #directory-tree li {
@@ -28,6 +34,10 @@ body {
 #editor-area {
     position: absolute; 
     left: 240px; 
+}
+
+#editor-tabs a {
+    padding: 2px 4px 2px 4px;
 }
 
 .tree-icon {
