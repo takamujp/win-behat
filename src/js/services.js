@@ -73,7 +73,8 @@ angular.module('winbehat').factory('behatService', function () {
         name: path.split('\\').pop(),
         isSelected: false,
         text: text,
-        lastText: text
+        lastText: '',
+        history: {}
       });
     }
   };

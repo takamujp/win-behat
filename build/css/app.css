@@ -40,6 +40,10 @@ body {
     padding: 2px 4px 2px 4px;
 }
 
+.bold {
+    font-weight: bold;
+}
+
 .tree-icon {
     width: 15px;
     height: 15px;
