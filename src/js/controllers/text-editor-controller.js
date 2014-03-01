@@ -25,6 +25,9 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
         }
     };
     
+    /**
+     * 編集中のファイルを監視、編集中のファイルに増減があるとき一番後ろのタブを選択状態にする
+     */
     $scope.$watchCollection('editFilelist', function (list) {
         var len = list.length;
         if (len) {
@@ -33,6 +36,11 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
         }
     });
     
+    /**
+     * タブを太字で表示するかどうかを判定する
+     * 
+     * @param {object} file
+     */
     $scope.isBold = function (file) {
         return {
             'bold': file.text != file.lastText
@@ -45,7 +53,23 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
      * @param {number} index
      */
     $scope.select = function (index) {
+        var prev = $scope.editFile;
         $scope.editFile = editFilelistService.select(index) || {text: ''};
+        
+        // 「space」を入力すると何故か$scope.editFile.textがundefinedになり、
+        // タブ切り替えで元のタブに戻した時にテキストが表示されなくなってしまうので、
+        // このタイミングでtextをCodeMirrorから取得しておく
+        prev.text = $scope.codeMirror.getValue();
+        
+        // タブを切り替えた時にredo,undoが正常に動作するように、ファイルごとにhistoryを覚えさせる
+        if (prev.path) {
+            prev.history = $scope.codeMirror.getHistory();
+        }
+        $scope.codeMirror.setValue($scope.editFile.text);
+        $scope.codeMirror.clearHistory();
+        if ($scope.editFile.history) {
+            $scope.codeMirror.setHistory($scope.editFile.history);
+        }
     };
     
     /**
@@ -58,6 +82,9 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
         $scope.select(index - 1);
     };
     
+    /**
+     * 最後に保存したテキストを記憶させる
+     */
     var updateLastText = function () {
         // 更新されたかを判定するために、読み込み時のテキストを記憶しておく
         // CodeMirrorに値をセットする前と後で比較すると別の文字列と判定されてしまうので、

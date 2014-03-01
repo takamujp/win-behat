@@ -74,7 +74,7 @@ angular.module('winbehat').factory('behatService', function () {
         isSelected: false,
         text: text,
         lastText: '',
-        history: {}
+        history: null
       });
     }
   };

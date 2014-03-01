@@ -25,7 +25,7 @@ angular.module('winbehat').factory('editFilelistService', function () {
                 isSelected: false,
                 text: text,
                 lastText: '',
-                history: {}
+                history: null
             });
         }
     };
