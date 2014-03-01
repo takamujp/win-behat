@@ -1,6 +1,6 @@
 
 
-angular.module('winbehat').controller('textEditorController', function ($scope, codeMirrorService, editFilelistService) {
+angular.module('winbehat').controller('textEditorController', function ($scope, codeMirrorService, editFilelistService, modalService) {
     $scope.editFilelist = editFilelistService.list;
     $scope.editFileCount = 0;
     $scope.editFile = {};
@@ -34,7 +34,11 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
         var len = list.length;
         if (len > $scope.editFileCount) {
             $scope.select(len - 1);
-            updateLastText();
+
+            // 更新されたかを判定するために、読み込み時のテキストを記憶しておく
+            // CodeMirrorに値をセットする前と後で比較すると別の文字列と判定されてしまうので、一度CodeMirrorにセットしてその値を記憶させる。
+            $scope.codeMirror.doc.setValue($scope.editFile.text);
+            $scope.editFile.lastText = $scope.codeMirror.doc.getValue();
         }
         $scope.editFileCount = len;
     });
@@ -46,7 +50,7 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
      */
     $scope.isBold = function (file) {
         return {
-            'bold': file.text != file.lastText
+            'bold': file.isChanged()
         };
     };
     
@@ -93,11 +97,45 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
      * 
      * @param {number} index
      */
-    $scope.remove = function (index) {
-        var file = editFilelistService.remove(index);
+    $scope.close = function (index) {
         
-        if (file.path == $scope.editFile.path) {
-            $scope.select(index - 1);
+        var modalInstance = null,
+            close = function () {
+                var file = editFilelistService.remove(index);
+
+                if (file.path == $scope.editFile.path) {
+                    $scope.select(index - 1);
+                }
+            };
+        
+        if ($scope.editFilelist[index].text != $scope.editFilelist[index].lastText) {
+            modalInstance = modalService.openModal('template/modal/confirm.html', false, {
+                'yesLabel': '保存して閉じる',
+                'noLabel': '保存せずに閉じる',
+                'cancelLabel': 'キャンセル',
+                'title': '保存の確認',
+                'message': 'ファイルは変更されています。保存しますか？'
+            });
+            modalInstance.result.then(function (result) {
+                if (result.selected == 'ok') {
+                    save(function (err) {
+                        if (err) {
+                            modalService.openModal('template/modal/error.html', true, {
+                                title: 'ファイル保存エラー',
+                                message: 'ファイルの保存に失敗しました。'
+                            });
+                            return;
+                        }
+                        
+                        close();
+                        $scope.$apply();
+                    });
+                } else if (result.selected == 'no') {
+                    close();
+                }
+            });
+        } else {
+            close();
         }
     };
     
@@ -106,24 +144,25 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
      * 
      * @param {object} file
      */
-    var save = function () {
-        $scope.editFile.save(function (err) {
+    var save = function (callback) {
+        if (!$scope.editFile.path || !$scope.editFile.isChanged()) {
+            return;
+        }
+        $scope.editFile.text = $scope.codeMirror.getValue();
+        
+        callback = callback || function (err) {
             if (err) {
+                modalService.openModal('template/modal/error.html', true, {
+                    title: 'ファイル保存エラー',
+                    message: 'ファイルの保存に失敗しました。'
+                });
                 return;
             }
             
             $scope.$apply();
-        });
+        };
+        
+        $scope.editFile.save(callback);
     };
     
-    /**
-     * 最後に保存したテキストを記憶させる
-     */
-    var updateLastText = function () {
-        // 更新されたかを判定するために、読み込み時のテキストを記憶しておく
-        // CodeMirrorに値をセットする前と後で比較すると別の文字列と判定されてしまうので、
-        // 一度CodeMirrorにセットしてその値を記憶させておく。
-        $scope.codeMirror.doc.setValue($scope.editFile.text);
-        $scope.editFile.lastText = $scope.codeMirror.doc.getValue();
-    };
 });

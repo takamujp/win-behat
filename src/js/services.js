@@ -76,6 +76,10 @@ angular.module('winbehat').factory('behatService', function () {
         lastText: '',
         history: null,
         save: function (callback) {
+          if (this.text == null) {
+            callback && callback(new Error('text undefined'));
+            return;
+          }
           fs.writeFile(this.path, this.text, function (err) {
             if (err && callback) {
               callback(err);
@@ -84,6 +88,9 @@ angular.module('winbehat').factory('behatService', function () {
             this.lastText = this.text;
             callback && callback();
           }.bind(this));
+        },
+        isChanged: function () {
+          return this.text != this.lastText;
         }
       });
     }
@@ -112,4 +119,49 @@ angular.module('winbehat').factory('behatService', function () {
   };
 });angular.module('winbehat').factory('filelistService', function () {
   return require('./js/my-modules/filelist');
-});
+});angular.module('winbehat').factory('modalService', [
+  '$modal',
+  function ($modal) {
+    /**
+     * モーダルを開く
+     * 
+     * @param {string} template テンプレートファイルのパス または テンプレート文字列
+     * @param {bool} backdrop モーダル外をクリックした時に画面を ture:閉じる, false:閉じない
+     * @param {object} params モーダルのコントローラに渡すパラメータ
+     */
+    var openModal = function (template, backdrop, params) {
+      return $modal.open({
+        templateUrl: template,
+        controller: function ($scope, $modalInstance, params) {
+          $scope.params = params || {};
+          $scope.init && $scope.init($scope);
+          $scope.ok = params.ok || function () {
+            $modalInstance.close(params);
+          };
+          $scope.yes = params.yes || function () {
+            $modalInstance.close({
+              selected: 'ok',
+              params: params
+            });
+          };
+          $scope.no = params.no || function () {
+            $modalInstance.close({
+              selected: 'no',
+              params: params
+            });
+          };
+          $scope.cancel = params.cancel || function () {
+            $modalInstance.dismiss('cancel');
+          };
+        },
+        backdrop: backdrop || false,
+        resolve: {
+          params: function () {
+            return params;
+          }
+        }
+      });
+    };
+    return { openModal: openModal };
+  }
+]);

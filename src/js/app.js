@@ -1,1 +1,1 @@
-angular.module('winbehat', ['ui.codemirror']);
+angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);
