@@ -31,7 +31,7 @@ angular.module('winbehat').factory('editFilelistService', function () {
     };
     
     var remove = function (id) {
-        return list.splice(id, 1);
+        return list.splice(id, 1)[0];
     };
     
     var select = function (id) {

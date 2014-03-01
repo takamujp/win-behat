@@ -27,7 +27,7 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
     };
     
     /**
-     * 編集中のファイルを監視、編集中のファイルに増減があるとき一番後ろのタブを選択状態にする
+     * 編集中のファイルを監視,ファイルが増えた時にそのファイルを選択中にする
      */
     $scope.$watchCollection('editFilelist', function (list) {
         var len = list.length;
@@ -93,8 +93,11 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
      * @param {number} index
      */
     $scope.remove = function (index) {
-        editFilelistService.remove(index);
-        $scope.select(index - 1);
+        var file = editFilelistService.remove(index);
+        
+        if (file.path == $scope.editFile.path) {
+            $scope.select(index - 1);
+        }
     };
     
     /**
