@@ -117,8 +117,11 @@ angular.module('winbehat', ['ui.codemirror']);;angular.module('winbehat').contro
      * @param {number} index
      */
     $scope.select = function (index) {
-      var prev = $scope.editFile;
-      $scope.editFile = editFilelistService.select(index) || { text: '' };
+      var prev = $scope.editFile, selected = editFilelistService.select(index) || { text: '' }, removeLastHistory = null;
+      if (prev.path == selected.path) {
+        return;
+      }
+      $scope.editFile = selected;
       // 「space」を入力すると何故か$scope.editFile.textがundefinedになり、
       // タブ切り替えで元のタブに戻した時にテキストが表示されなくなってしまうので、
       // このタイミングでtextをCodeMirrorから取得しておく
@@ -127,11 +130,16 @@ angular.module('winbehat', ['ui.codemirror']);;angular.module('winbehat').contro
       if (prev.path) {
         prev.history = $scope.codeMirror.getHistory();
       }
-      $scope.codeMirror.setValue($scope.editFile.text);
       $scope.codeMirror.clearHistory();
       if ($scope.editFile.history) {
         $scope.codeMirror.setHistory($scope.editFile.history);
       }
+      // 「前のタブのテキストから現在のタブのテキストへの変更」がhistoryに保存されるため、
+      // hisotryの変更を監視して、最新のhistoryを1件削除する。
+      removeLastHistory = $scope.$watch('codeMirror.doc.history', function () {
+        $scope.codeMirror.doc.history.done.pop();
+        removeLastHistory();  // 削除したら監視解除
+      });
     };
     /**
      * ファイルを閉じる
