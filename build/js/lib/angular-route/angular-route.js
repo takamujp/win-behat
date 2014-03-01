@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.2.14-build.2315+sha.832be41
+ * @license AngularJS v1.2.14-build.2348+sha.0d034a9
  * (c) 2010-2014 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -64,10 +64,10 @@ function $RouteProvider(){
    *    * `path` can contain optional named groups with a question mark: e.g.`:name?`.
    *
    *    For example, routes like `/color/:color/largecode/:largecode*\/edit` will match
-   *    `/color/brown/largecode/code/with/slashs/edit` and extract:
+   *    `/color/brown/largecode/code/with/slashes/edit` and extract:
    *
    *    * `color: brown`
-   *    * `largecode: code/with/slashs`.
+   *    * `largecode: code/with/slashes`.
    *
    *
    * @param {Object} route Mapping information to be assigned to `$route.current` on route
@@ -557,7 +557,7 @@ function $RouteProvider(){
 
 
     /**
-     * @returns the current active route, by matching it against the URL
+     * @returns {Object} the current active route, by matching it against the URL
      */
     function parseRoute() {
       // Match a route
@@ -575,7 +575,7 @@ function $RouteProvider(){
     }
 
     /**
-     * @returns interpolation of the redirect path with the parameters
+     * @returns {string} interpolation of the redirect path with the parameters
      */
     function interpolate(string, params) {
       var result = [];
@@ -824,6 +824,7 @@ function ngViewFactory(   $route,   $anchorScroll,   $animate) {
     link: function(scope, $element, attr, ctrl, $transclude) {
         var currentScope,
             currentElement,
+            previousElement,
             autoScrollExp = attr.autoscroll,
             onloadExp = attr.onload || '';
 
@@ -831,12 +832,19 @@ function ngViewFactory(   $route,   $anchorScroll,   $animate) {
         update();
 
         function cleanupLastView() {
-          if (currentScope) {
+          if(previousElement) {
+            previousElement.remove();
+            previousElement = null;
+          }
+          if(currentScope) {
             currentScope.$destroy();
             currentScope = null;
           }
           if(currentElement) {
-            $animate.leave(currentElement);
+            $animate.leave(currentElement, function() {
+              previousElement = null;
+            });
+            previousElement = currentElement;
             currentElement = null;
           }
         }
