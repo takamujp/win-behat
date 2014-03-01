@@ -2,6 +2,7 @@
 
 angular.module('winbehat').controller('textEditorController', function ($scope, codeMirrorService, editFilelistService) {
     $scope.editFilelist = editFilelistService.list;
+    $scope.editFileCount = 0;
     $scope.editFile = {};
     $scope.codeMirror = {};
     $scope.editorOptions = {
@@ -30,10 +31,11 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
      */
     $scope.$watchCollection('editFilelist', function (list) {
         var len = list.length;
-        if (len) {
+        if (len > $scope.editFileCount) {
             $scope.select(len - 1);
             updateLastText();
         }
+        $scope.editFileCount = len;
     });
     
     /**

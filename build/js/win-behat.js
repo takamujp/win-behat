@@ -71,6 +71,7 @@ angular.module('winbehat', ['ui.codemirror']);;angular.module('winbehat').contro
   'editFilelistService',
   function ($scope, codeMirrorService, editFilelistService) {
     $scope.editFilelist = editFilelistService.list;
+    $scope.editFileCount = 0;
     $scope.editFile = {};
     $scope.codeMirror = {};
     $scope.editorOptions = {
@@ -98,10 +99,11 @@ angular.module('winbehat', ['ui.codemirror']);;angular.module('winbehat').contro
      */
     $scope.$watchCollection('editFilelist', function (list) {
       var len = list.length;
-      if (len) {
+      if (len > $scope.editFileCount) {
         $scope.select(len - 1);
         updateLastText();
       }
+      $scope.editFileCount = len;
     });
     /**
      * タブを太字で表示するかどうかを判定する
