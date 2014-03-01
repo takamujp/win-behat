@@ -88,7 +88,10 @@ angular.module('winbehat').controller('directoryTreeController', [
       extraKeys: {
         'Ctrl-/': 'toggleComment',
         'Tab': codeMirrorService.insertTab,
-        'Ctrl-Space': codeMirrorService.autocomplete
+        'Ctrl-Space': codeMirrorService.autocomplete,
+        'Ctrl-S': function () {
+          save();
+        }
       },
       onLoad: function (cm) {
         $scope.codeMirror = cm;
@@ -153,6 +156,19 @@ angular.module('winbehat').controller('directoryTreeController', [
       if (file.path == $scope.editFile.path) {
         $scope.select(index - 1);
       }
+    };
+    /**
+     * ファイルを保存する
+     * 
+     * @param {object} file
+     */
+    var save = function () {
+      $scope.editFile.save(function (err) {
+        if (err) {
+          return;
+        }
+        $scope.$apply();
+      });
     };
     /**
      * 最後に保存したテキストを記憶させる

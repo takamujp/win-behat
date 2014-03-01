@@ -88,7 +88,10 @@ angular.module('winbehat', ['ui.codemirror']);;angular.module('winbehat').contro
       extraKeys: {
         'Ctrl-/': 'toggleComment',
         'Tab': codeMirrorService.insertTab,
-        'Ctrl-Space': codeMirrorService.autocomplete
+        'Ctrl-Space': codeMirrorService.autocomplete,
+        'Ctrl-S': function () {
+          save();
+        }
       },
       onLoad: function (cm) {
         $scope.codeMirror = cm;
@@ -153,6 +156,19 @@ angular.module('winbehat', ['ui.codemirror']);;angular.module('winbehat').contro
       if (file.path == $scope.editFile.path) {
         $scope.select(index - 1);
       }
+    };
+    /**
+     * ファイルを保存する
+     * 
+     * @param {object} file
+     */
+    var save = function () {
+      $scope.editFile.save(function (err) {
+        if (err) {
+          return;
+        }
+        $scope.$apply();
+      });
     };
     /**
      * 最後に保存したテキストを記憶させる
@@ -285,7 +301,17 @@ angular.module('winbehat', ['ui.codemirror']);;angular.module('winbehat').contro
         isSelected: false,
         text: text,
         lastText: '',
-        history: null
+        history: null,
+        save: function (callback) {
+          fs.writeFile(this.path, this.text, function (err) {
+            if (err && callback) {
+              callback(err);
+              return;
+            }
+            this.lastText = this.text;
+            callback && callback();
+          }.bind(this));
+        }
       });
     }
   };

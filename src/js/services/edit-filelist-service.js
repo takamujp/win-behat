@@ -25,7 +25,18 @@ angular.module('winbehat').factory('editFilelistService', function () {
                 isSelected: false,
                 text: text,
                 lastText: '',
-                history: null
+                history: null,
+                save: function (callback) {
+                    fs.writeFile(this.path, this.text, function (err) {
+                        if (err && callback) {
+                            callback(err);
+                            return;
+                        }
+                        
+                        this.lastText = this.text;
+                        callback && callback();
+                    }.bind(this));
+                }
             });
         }
     };
@@ -52,7 +63,7 @@ angular.module('winbehat').factory('editFilelistService', function () {
         
         return list[id];
     };
-    
+        
     return {
         list: list,
         push: push,
