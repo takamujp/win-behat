@@ -167,6 +167,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
           'yesLabel': '\u4fdd\u5b58\u3057\u3066\u9589\u3058\u308b',
           'noLabel': '\u4fdd\u5b58\u305b\u305a\u306b\u9589\u3058\u308b',
           'cancelLabel': '\u30ad\u30e3\u30f3\u30bb\u30eb',
+          'hideCancel': true,
           'title': '\u4fdd\u5b58\u306e\u78ba\u8a8d',
           'message': '\u30d5\u30a1\u30a4\u30eb\u306f\u5909\u66f4\u3055\u308c\u3066\u3044\u307e\u3059\u3002\u4fdd\u5b58\u3057\u307e\u3059\u304b\uff1f'
         });
