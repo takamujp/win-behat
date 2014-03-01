@@ -113,7 +113,6 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
                 'yesLabel': '保存して閉じる',
                 'noLabel': '保存せずに閉じる',
                 'cancelLabel': 'キャンセル',
-                'hideCancel': true,
                 'title': '保存の確認',
                 'message': 'ファイルは変更されています。保存しますか？'
             });
