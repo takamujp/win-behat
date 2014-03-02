@@ -1,8 +1,9 @@
 angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('winbehat').controller('directoryTreeController', [
   '$scope',
+  '$rootScope',
   'filelistService',
   'editFilelistService',
-  function ($scope, filelistService, editFilelistService) {
+  function ($scope, $rootScope, filelistService, editFilelistService) {
     $scope.filelist = {};
     $scope.hasFilelist = false;
     /**
@@ -30,6 +31,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
      * @param {number} index
      */
     $scope.clickNode = function (element, index) {
+      var id = null;
       // ディレクトリなら表示を切り替える
       if (element.item.isDirectory) {
         if (element.item.isOpen) {
@@ -47,7 +49,10 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         }
       } else {
         // ファイルならエディタを開く
-        editFilelistService.push(element.item.name);
+        id = editFilelistService.push(element.item.name);
+        if (id !== true) {
+          $rootScope.$broadcast('selectAlreadyOpenFile', id);
+        }
       }
     };
     /**
@@ -154,6 +159,9 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         removeLastHistory();  // 削除したら監視解除
       });
     };
+    $scope.$on('selectAlreadyOpenFile', function (event, id) {
+      $scope.select(id);
+    });
     /**
      * ファイルを閉じる
      * 
@@ -326,42 +334,41 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
 });angular.module('winbehat').factory('editFilelistService', function () {
   var fs = require('fs'), path = require('path'), ext_list = require('./js/my-modules/filename-extension-list'), list = [];
   var push = function (file_path) {
-    var notExist = true, text = '', i = 0, len = list.length;
+    var text = '', i = 0, len = list.length;
     for (; i < len; i++) {
       if (list[i].path === file_path) {
-        notExist = false;
+        return i;
         break;
       }
     }
-    if (notExist) {
-      text = fs.readFileSync(file_path).toString();
-      list.push({
-        path: file_path,
-        name: file_path.split('\\').pop(),
-        isSelected: false,
-        text: text,
-        lastText: '',
-        history: null,
-        mode: ext_list[path.extname(file_path).split('.').pop()],
-        save: function (callback) {
-          if (this.text == null) {
-            callback && callback(new Error('text undefined'));
+    text = fs.readFileSync(file_path).toString();
+    list.push({
+      path: file_path,
+      name: file_path.split('\\').pop(),
+      isSelected: false,
+      text: text,
+      lastText: '',
+      history: null,
+      mode: ext_list[path.extname(file_path).split('.').pop()],
+      save: function (callback) {
+        if (this.text == null) {
+          callback && callback(new Error('text undefined'));
+          return;
+        }
+        fs.writeFile(this.path, this.text, function (err) {
+          if (err && callback) {
+            callback(err);
             return;
           }
-          fs.writeFile(this.path, this.text, function (err) {
-            if (err && callback) {
-              callback(err);
-              return;
-            }
-            this.lastText = this.text;
-            callback && callback();
-          }.bind(this));
-        },
-        isChanged: function () {
-          return this.text != this.lastText;
-        }
-      });
-    }
+          this.lastText = this.text;
+          callback && callback();
+        }.bind(this));
+      },
+      isChanged: function () {
+        return this.text != this.lastText;
+      }
+    });
+    return true;
   };
   var remove = function (id) {
     return list.splice(id, 1)[0];

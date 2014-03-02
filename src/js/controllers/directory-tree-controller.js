@@ -1,5 +1,5 @@
 
-angular.module('winbehat').controller('directoryTreeController', function ($scope, filelistService, editFilelistService) {
+angular.module('winbehat').controller('directoryTreeController', function ($scope, $rootScope, filelistService, editFilelistService) {
     $scope.filelist = {};
     $scope.hasFilelist = false;
 
@@ -32,6 +32,8 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
      */
     $scope.clickNode = function (element, index) {
         
+        var id = null;
+        
         // ディレクトリなら表示を切り替える
         if (element.item.isDirectory) {
             if (element.item.isOpen) {
@@ -48,7 +50,11 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                 });
             }
         } else { // ファイルならエディタを開く
-            editFilelistService.push(element.item.name);
+            id = editFilelistService.push(element.item.name);
+            
+            if (id !== true) {
+                $rootScope.$broadcast('selectAlreadyOpenFile', id);
+            }
         }
     };
     

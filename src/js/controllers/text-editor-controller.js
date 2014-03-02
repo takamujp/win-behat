@@ -96,6 +96,10 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
         });
     };
     
+    $scope.$on('selectAlreadyOpenFile', function(event, id) {
+        $scope.select(id);
+    });
+    
     /**
      * ファイルを閉じる
      * 
