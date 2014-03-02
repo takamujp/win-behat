@@ -2,8 +2,11 @@ body {
     margin: 0;
     overflow: hidden;
     font-family: "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro",Osaka, "メイリオ", Meiryo, "ＭＳ Ｐゴシック", "MS PGothic", sans-serif;
+    background: #363636;
+    color: #D3D3D3;
 }
 
+/*ディレクトリツリー*/
 #directory-tree {
     float: left;
     height: 100%;
@@ -17,7 +20,8 @@ body {
     overflow: inherit;
     white-space: nowrap;
     display: -webkit-box;
-    color: none;
+    font-family: "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro",Osaka, "メイリオ", Meiryo, "ＭＳ Ｐゴシック", "MS PGothic", sans-serif;
+    color: #D3D3D3;
     border: none;
     background-color: rgba(0,0,0,0);
 }
@@ -30,19 +34,6 @@ body {
 
 #directory-tree ul ul, #directory-tree li {
     padding: 0 0 0 8px
-}
-
-#editor-area {
-    position: absolute; 
-    left: 240px; 
-}
-
-#editor-tabs a {
-    padding: 2px 4px 2px 4px;
-}
-
-.bold {
-    font-weight: bold;
 }
 
 .tree-icon {
@@ -64,6 +55,21 @@ body {
     background-image: url("../img/file.png");
 }
 
+/*エディター*/
+#editor-area {
+    position: absolute; 
+    left: 240px; 
+}
+
+#editor-tabs a {
+    padding: 2px 4px 2px 4px;
+    background: #424242;
+    color: #D3D3D3;
+}
+
+.bold {
+    font-weight: bold;
+}
 
 .CodeMirror {
     border: 1px solid #eee;
@@ -71,4 +77,9 @@ body {
 }
 .CodeMirror-scroll {
     overflow-x: scroll;
+}
+
+/*bootstrap拡張*/
+.modal-content {
+    background: #424242;
 }
