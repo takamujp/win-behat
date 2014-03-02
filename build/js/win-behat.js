@@ -76,6 +76,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     $scope.editFile = {};
     $scope.codeMirror = {};
     $scope.editorOptions = {
+      theme: 'mbo',
       lineNumbers: true,
       indentUnit: 4,
       indentWithTabs: false,
@@ -85,7 +86,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       styleSelectedText: true,
       styleActiveLine: true,
       continueComments: true,
-      mode: 'php',
+      mode: null,
       extraKeys: {
         'Ctrl-/': 'toggleComment',
         'Tab': codeMirrorService.insertTab,
@@ -131,6 +132,8 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         return;
       }
       $scope.editFile = selected;
+      $scope.codeMirror.setOption('mode', selected.mode || '');
+      selected.mode && CodeMirror.autoLoadMode($scope.codeMirror, selected.mode);
       // 「space」を入力すると何故か$scope.editFile.textがundefinedになり、
       // タブ切り替えで元のタブに戻した時にテキストが表示されなくなってしまうので、
       // このタイミングでtextをCodeMirrorから取得しておく
@@ -317,24 +320,25 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     'changeMode': changeMode
   };
 });angular.module('winbehat').factory('editFilelistService', function () {
-  var fs = require('fs'), list = [];
-  var push = function (path) {
+  var fs = require('fs'), path = require('path'), ext_list = require('./js/my-modules/filename-extension-list'), list = [];
+  var push = function (file_path) {
     var notExist = true, text = '', i = 0, len = list.length;
     for (; i < len; i++) {
-      if (list[i].path === path) {
+      if (list[i].path === file_path) {
         notExist = false;
         break;
       }
     }
     if (notExist) {
-      text = fs.readFileSync(path).toString();
+      text = fs.readFileSync(file_path).toString();
       list.push({
-        path: path,
-        name: path.split('\\').pop(),
+        path: file_path,
+        name: file_path.split('\\').pop(),
         isSelected: false,
         text: text,
         lastText: '',
         history: null,
+        mode: ext_list[path.extname(file_path).split('.').pop()],
         save: function (callback) {
           if (this.text == null) {
             callback && callback(new Error('text undefined'));
