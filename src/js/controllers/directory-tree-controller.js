@@ -1,5 +1,5 @@
 
-angular.module('winbehat').controller('directoryTreeController', function ($scope, $rootScope, filelistService, editFilelistService) {
+angular.module('winbehat').controller('directoryTreeController', function ($scope, $rootScope, filelistService, editFilelistService, modalService) {
     $scope.filelist = {};
     $scope.hasFilelist = false;
 
@@ -32,7 +32,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
      */
     $scope.clickNode = function (element, index) {
         
-        var id = null;
+        var result = null;
         
         // ディレクトリなら表示を切り替える
         if (element.item.isDirectory) {
@@ -50,10 +50,17 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                 });
             }
         } else { // ファイルならエディタを開く
-            id = editFilelistService.push(element.item.name);
+            result = editFilelistService.push(element.item.name);
             
-            if (id !== true) {
-                $rootScope.$broadcast('selectAlreadyOpenFile', id);
+            if (result !== true) {
+                if (typeof result == 'number') {
+                    $rootScope.$broadcast('selectAlreadyOpenFile', result);
+                } else {
+                    modalService.openModal('template/modal/error.html', true, {
+                        title: 'ファイル読み込みエラー',
+                        message: result.message
+                    });
+                }
             }
         }
     };

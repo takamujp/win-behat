@@ -40,24 +40,37 @@
         <script src="./js/lib/codemirror/mode/clike/clike.js"></script>
         <script src="./js/lib/codemirror/mode/php/php.js"></script>
         <script src="./js/lib/codemirror/mode/gherkin/gherkin.js"></script>
+        <title>win-behat</title>
     </head>
     <body>
-        <div id="directory-tree" class="custom-scrollbar" ng-controller="directoryTreeController">
-            <div>
-                <input type="file" nwdirectory onchange="angular.element(this).scope().openDirectory(this);" />
-            </div>
-            <div ng-if="hasFilelist">
-                <dirctory-tree-node file="filelist"></dirctory-tree-node>
-            </div>
+        <div id="menu-bar" ng-controller="menuController">
+            <ul class="nav nav-pills">
+                <li class="dropdown" ng-repeat="category in menuItems">
+                    <a class="dropdown-toggle" role="button" data-toggle="dropdown">{{category.label}}<b class="caret"></b></a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li role="presentation" ng-repeat="item in category.items"><a role="menuitem" ng-click="clickItem(category.label, item.label)" tabindex="-1">{{item.label}}</a></li>
+                    </ul>
+                </li>
+            </ul>
         </div>
-        <div id='editor-area' ng-controller="textEditorController">
-            <div class="tabbable"> 
-                <ul id="editor-tabs" class="nav nav-tabs"> 
-                    <li ng-repeat="file in editFilelist" ng-class="{active:file.isSelected}">
-                        <a ng-click="select($index)" ng-class="isBold(file)">{{file.name}}<button class="close" title="閉じる" type="submit" ng-click="close($index)">x</button></a> 
-                    </li> 
-                </ul> 
-                <div class="tab-content"><textarea ui-codemirror="editorOptions" ng-model="editFile.text" resize-code-mirror style="height: {{windowHeight}}px; width: {{windowWidth-240}}px"></textarea></div> 
+        <div>
+            <div id="directory-tree" class="custom-scrollbar" ng-controller="directoryTreeController" resize-window style="height: {{menuHeight}}px;}}">
+                <div>
+                    <input id="dir-dialog" type="file" style="display:none" nwdirectory onchange="angular.element(this).scope().openDirectory(this);" />
+                </div>
+                <div ng-if="hasFilelist">
+                    <dirctory-tree-node file="filelist"></dirctory-tree-node>
+                </div>
+            </div>
+            <div id='editor-area' ng-controller="textEditorController">
+                <div class="tabbable"> 
+                    <ul id="editor-tabs" class="nav nav-tabs"> 
+                        <li ng-repeat="file in editFilelist" ng-class="{active:file.isSelected}">
+                            <a ng-click="select($index)" ng-class="isBold(file)">{{file.name}}<button class="close" title="閉じる" type="submit" ng-click="close($index)">x</button></a> 
+                        </li> 
+                    </ul> 
+                    <div class="tab-content"><textarea ui-codemirror="editorOptions" ng-model="editFile.text" resize-window style="height: {{editorHeight}}px; width: {{windowWidth-240}}px"></textarea></div> 
+                </div>
             </div>
         </div>
     </body>

@@ -3,7 +3,8 @@ angular.module('winbehat').controller('directoryTreeController', [
   '$rootScope',
   'filelistService',
   'editFilelistService',
-  function ($scope, $rootScope, filelistService, editFilelistService) {
+  'modalService',
+  function ($scope, $rootScope, filelistService, editFilelistService, modalService) {
     $scope.filelist = {};
     $scope.hasFilelist = false;
     /**
@@ -31,7 +32,7 @@ angular.module('winbehat').controller('directoryTreeController', [
      * @param {number} index
      */
     $scope.clickNode = function (element, index) {
-      var id = null;
+      var result = null;
       // ディレクトリなら表示を切り替える
       if (element.item.isDirectory) {
         if (element.item.isOpen) {
@@ -49,9 +50,16 @@ angular.module('winbehat').controller('directoryTreeController', [
         }
       } else {
         // ファイルならエディタを開く
-        id = editFilelistService.push(element.item.name);
-        if (id !== true) {
-          $rootScope.$broadcast('selectAlreadyOpenFile', id);
+        result = editFilelistService.push(element.item.name);
+        if (result !== true) {
+          if (typeof result == 'number') {
+            $rootScope.$broadcast('selectAlreadyOpenFile', result);
+          } else {
+            modalService.openModal('template/modal/error.html', true, {
+              title: '\u30d5\u30a1\u30a4\u30eb\u8aad\u307f\u8fbc\u307f\u30a8\u30e9\u30fc',
+              message: result.message
+            });
+          }
         }
       }
     };
@@ -68,6 +76,30 @@ angular.module('winbehat').controller('directoryTreeController', [
         'icon-file': !element.item.isDirectory,
         'tree-icon': true
       };
+    };
+  }
+]);angular.module('winbehat').controller('menuController', [
+  '$scope',
+  '$rootScope',
+  function ($scope, $rootScope) {
+    var CATEGORY = { FILE: '\u30d5\u30a1\u30a4\u30eb' };
+    var ACTION = { OPEN_PROJECT: '\u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u3092\u958b\u304f' };
+    $scope.menuItems = [{
+        label: CATEGORY.FILE,
+        items: [{ label: ACTION.OPEN_PROJECT }]
+      }];
+    $scope.clickItem = function (category, action) {
+      if (category == CATEGORY.FILE) {
+        switch (action) {
+        case ACTION.OPEN_PROJECT:
+          setTimeout(function () {
+            document.querySelector('#dir-dialog').click();
+          }, 0);
+          break;
+        default:
+          break;
+        }
+      }
     };
   }
 ]);angular.module('winbehat').controller('textEditorController', [

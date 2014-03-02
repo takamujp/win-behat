@@ -61,6 +61,10 @@ body {
     left: 240px; 
 }
 
+#editor-tabs {
+    min-height: 26px;
+}
+
 #editor-tabs a {
     padding: 2px 4px 2px 4px;
     background: #424242;
@@ -84,7 +88,35 @@ body {
     background: #424242;
 }
 
+#menu-bar .nav > li > a {
+    padding: 4px 15px;
+    color: #eee;
+}
+.nav > li > a:hover, .nav > li > a:focus { 
+    background-color: #428bca;
+}
 
+.nav .open > a, .nav .open > a:hover, .nav .open > a:hover, .nav .open > a:focus {
+    background-color: #428bca;
+    border-color: #eee;
+    color: #eee;
+}
+
+.dropdown-menu {
+    background-color: #222222;    
+}
+
+.dropdown-menu > li > a {
+    color: #E4E4E4;
+}
+
+.dropdown-menu > li > a:hover {
+    background-color: #303030;
+    color: #E7E7E7;
+}
+
+
+/*スクロールバー*/
 .custom-scrollbar::-webkit-scrollbar, .CodeMirror-vscrollbar::-webkit-scrollbar, .CodeMirror-hscrollbar::-webkit-scrollbar
 {
     width: 10px;

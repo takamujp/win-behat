@@ -21,16 +21,20 @@ angular.module('winbehat').directive('dirctoryTreeNode', [
       }
     };
   }
-]);angular.module('winbehat').directive('resizeCodeMirror', [
+]);angular.module('winbehat').directive('resizeWindow', [
   '$window',
   function ($window) {
     return function ($scope) {
       var editor_tabs = document.querySelector('#editor-tabs');
       $scope.windowHeight = 0;
       $scope.windowWidth = 0;
+      $scope.editorHeight = 0;
+      $scope.menuHeight = 0;
       $scope.initializeWindowSize = function () {
-        $scope.windowHeight = $window.innerHeight - editor_tabs.clientHeight;
+        $scope.windowHeight = $window.innerHeight;
         $scope.windowWidth = $window.innerWidth;
+        $scope.editorHeight = $window.innerHeight - editor_tabs.clientHeight - 28;
+        $scope.menuHeight = $window.innerHeight - 28;
       };
       $scope.initializeWindowSize();
       $scope.$watchCollection('editFilelist', function () {

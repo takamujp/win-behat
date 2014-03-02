@@ -66,7 +66,10 @@ angular.module('winbehat').factory('behatService', function () {
         break;
       }
     }
-    text = fs.readFileSync(file_path).toString();
+    if (!fs.existsSync(file_path)) {
+      return new Error(file_path + ' not found.');
+    }
+    text = fs.readFileSync(file_path, { encoding: 'utf-8' });
     list.push({
       path: file_path,
       name: file_path.split('\\').pop(),
