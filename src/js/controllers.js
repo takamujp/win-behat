@@ -131,7 +131,7 @@ angular.module('winbehat').controller('directoryTreeController', [
       if (prev.path == selected.path) {
         return;
       }
-      window.dispatchEvent(new Event('resize'));
+      window.dispatchEvent(new Event('changeTab'));
       $scope.editFile = selected;
       $scope.codeMirror.setOption('mode', selected.mode || '');
       selected.mode && CodeMirror.autoLoadMode($scope.codeMirror, selected.mode);

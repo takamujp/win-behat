@@ -18,5 +18,9 @@ angular.module('winbehat').directive("resizeCodeMirror", function ($window) {
             $scope.initializeWindowSize();
             return $scope.$apply();
         });
+        
+        angular.element($window).bind('changeTab', function () {
+            $scope.initializeWindowSize();
+        });
     };
 });

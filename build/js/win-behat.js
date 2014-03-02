@@ -131,7 +131,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       if (prev.path == selected.path) {
         return;
       }
-      window.dispatchEvent(new Event('resize'));
+      window.dispatchEvent(new Event('changeTab'));
       $scope.editFile = selected;
       $scope.codeMirror.setOption('mode', selected.mode || '');
       selected.mode && CodeMirror.autoLoadMode($scope.codeMirror, selected.mode);
@@ -259,6 +259,9 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       angular.element($window).bind('resize', function () {
         $scope.initializeWindowSize();
         return $scope.$apply();
+      });
+      angular.element($window).bind('changeTab', function () {
+        $scope.initializeWindowSize();
       });
     };
   }

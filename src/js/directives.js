@@ -40,6 +40,9 @@ angular.module('winbehat').directive('dirctoryTreeNode', [
         $scope.initializeWindowSize();
         return $scope.$apply();
       });
+      angular.element($window).bind('changeTab', function () {
+        $scope.initializeWindowSize();
+      });
     };
   }
 ]);
