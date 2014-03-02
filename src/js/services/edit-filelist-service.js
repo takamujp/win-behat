@@ -1,9 +1,11 @@
 
 angular.module('winbehat').factory('editFilelistService', function () {    
     var fs = require('fs'),
+        path = require('path'),
+        ext_list = require('./js/my-modules/filename-extension-list'),
         list = [];
     
-    var push = function (path) {
+    var push = function (file_path) {
         
         var notExist = true,
             text = '',
@@ -11,21 +13,22 @@ angular.module('winbehat').factory('editFilelistService', function () {
             len = list.length;
         
         for (; i < len; i++) {
-            if (list[i].path === path) {
+            if (list[i].path === file_path) {
                 notExist = false;
                 break;
             }
         }
 
         if (notExist) {
-            text = fs.readFileSync(path).toString();
+            text = fs.readFileSync(file_path).toString();
             list.push({
-                path: path,
-                name: path.split('\\').pop(),
+                path: file_path,
+                name: file_path.split('\\').pop(),
                 isSelected: false,
                 text: text,
                 lastText: '',
                 history: null,
+                mode: ext_list[path.extname(file_path).split('.').pop()],
                 save: function (callback) {
                     if (this.text == null) {
                         callback && callback(new Error('text undefined'));
