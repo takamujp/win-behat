@@ -68,7 +68,7 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
         if(prev.path == selected.path) {
             return;
         }
-    
+        window.dispatchEvent(new Event('resize'));
         $scope.editFile = selected;
         
         $scope.codeMirror.setOption('mode', selected.mode || '');

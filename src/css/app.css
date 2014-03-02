@@ -83,3 +83,52 @@ body {
 .modal-content {
     background: #424242;
 }
+
+
+.custom-scrollbar::-webkit-scrollbar, .CodeMirror-vscrollbar::-webkit-scrollbar, .CodeMirror-hscrollbar::-webkit-scrollbar
+{
+    width: 10px;
+    background: #eee;
+}
+.custom-scrollbar::-webkit-scrollbar:horizontal, .CodeMirror-vscrollbar::-webkit-scrollbar:horizontal, .CodeMirror-hscrollbar::-webkit-scrollbar:horizontal
+{
+    height: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-button, .CodeMirror-vscrollbar::-webkit-scrollbar-button, .CodeMirror-hscrollbar::-webkit-scrollbar-button
+{
+    width: 10px;
+    height: 10px;
+    background: #666;
+}
+.custom-scrollbar::-webkit-scrollbar-piece, .CodeMirror-vscrollbar::-webkit-scrollbar-piece, .CodeMirror-hscrollbar::-webkit-scrollbar-piece
+{
+    background: #eee;
+}
+.custom-scrollbar::-webkit-scrollbar-piece:start, .CodeMirror-vscrollbar::-webkit-scrollbar-piece:start, .CodeMirror-hscrollbar::-webkit-scrollbar-piece:start
+{
+    background: #eee;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb, .CodeMirror-vscrollbar::-webkit-scrollbar-thumb, .CodeMirror-hscrollbar::-webkit-scrollbar-thumb
+{
+    background: #3C3C3C;
+    border: solid 1px #696969;
+
+}
+.custom-scrollbar::-webkit-scrollbar-corner, .CodeMirror-vscrollbar::-webkit-scrollbar-corner, .CodeMirror-hscrollbar::-webkit-scrollbar-corner
+{
+    background: #333;
+}
+
+.CodeMirror-vscrollbar {
+    height: 100%;
+}
+
+.CodeMirror-hscrollbar {
+    width: 100%;
+}
+
+.CodeMirror-scrollbar-filler {
+    width: 10px!important;
+    height: 10px!important;
+    background: #666;
+}

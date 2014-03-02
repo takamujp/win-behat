@@ -42,7 +42,7 @@
         <script src="./js/lib/codemirror/mode/gherkin/gherkin.js"></script>
     </head>
     <body>
-        <div id="directory-tree" ng-controller="directoryTreeController">
+        <div id="directory-tree" class="custom-scrollbar" ng-controller="directoryTreeController">
             <div>
                 <input type="file" nwdirectory onchange="angular.element(this).scope().openDirectory(this);" />
             </div>

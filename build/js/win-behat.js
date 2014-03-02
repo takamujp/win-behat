@@ -131,6 +131,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       if (prev.path == selected.path) {
         return;
       }
+      window.dispatchEvent(new Event('resize'));
       $scope.editFile = selected;
       $scope.codeMirror.setOption('mode', selected.mode || '');
       selected.mode && CodeMirror.autoLoadMode($scope.codeMirror, selected.mode);
