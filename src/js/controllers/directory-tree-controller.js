@@ -1,7 +1,8 @@
 
-angular.module('winbehat').controller('directoryTreeController', function ($scope, $rootScope, filelistService, editFilelistService, modalService) {
+angular.module('winbehat').controller('directoryTreeController', function ($scope, $rootScope, filelistService, editFilelistService, modalService, behatService) {
     $scope.filelist = {};
     $scope.hasFilelist = false;
+    $scope.hasFeatures = false;
 
     /**
      * ディレクトリの階層情報を読み込む
@@ -14,13 +15,52 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
             return;
         }
         
+        // ディレクトリ直下のファイルの一覧を取得する
         filelistService.read(element.files[0].path, function (filelist) {
-            $scope.$apply(function () {
-                if (filelist) {
-                    $scope.filelist = filelist;
+            var i = 0, 
+                len = 0,
+                hasFeatures = false;
+
+            if (filelist) {
+                for (i = 0, len = filelist.children.length; i < len; i++) {
+                    if (filelist.children[i].name.split('\\').pop() == 'features') {
+                        hasFeatures = true;
+                        break;
+                    }
                 }
-                $scope.hasFilelist = true;
-            });
+
+                // featuresディレクトリが存在するならそのまま、ツリーに表示させる
+                if (hasFeatures) {
+                    $scope.$apply(function () {
+                        $scope.filelist = filelist;
+                        $scope.hasFilelist = true;
+                    });
+                } 
+                // 存在しない場合
+                else {
+                    modalInstance = modalService.openModal('template/modal/confirm.html', false, {
+                        'yesLabel': 'はい',
+                        'noLabel': 'いいえ',
+                        'hideCancel': true,
+                        'title': 'behat --init 実行確認',
+                        'message': '直下にfeaturesディレクトリが存在しなければ開くことができません。作成しますか？'
+                    });
+                    modalInstance.result.then(function (result) {
+                        if (result.selected == 'ok') {
+                            behatService.init(filelist.name, function (err, stdout, stderr) {
+                                if (err) {
+                                    modalService.openModal('template/modal/error.html', true, {
+                                        title: 'behat --init エラー',
+                                        message: stderr || err.message
+                                    });
+                                    return;
+                                }
+                                $scope.openDirectory(element);
+                            });
+                        } 
+                    });
+                }
+            }
         });
     };
     
