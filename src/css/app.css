@@ -55,6 +55,10 @@ body {
     background-image: url("../img/file.png");
 }
 
+#directory-tree-root > ul {
+    height: 100%;
+}
+
 /*エディター*/
 #editor-area {
     position: absolute; 

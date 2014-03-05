@@ -7,6 +7,7 @@
         <link rel="stylesheet" type="text/css" href="js/lib/codemirror/addon/dialog/dialog.css">
         <link rel="stylesheet" type="text/css" href="js/lib/codemirror/addon/hint/show-hint.css">
         <link rel="stylesheet" type="text/css" href="css/app.css">
+        <script src="./js/lib/jquery/jquery.js"></script>
         <script src="./js/lib/codemirror/codemirror.js"></script>
         <script src="./js/lib/angular/angular.js"></script>
         <script src="./js/lib/angular-route/angular-route.js"></script>
@@ -58,9 +59,17 @@
                 <div>
                     <input id="dir-dialog" type="file" style="display:none" nwdirectory onchange="angular.element(this).scope().openDirectory(this);" />
                 </div>
-                <div ng-if="hasFilelist">
-                    <dirctory-tree-node file="filelist"></dirctory-tree-node>
+                <div id="directory-tree-root" ng-if="hasFilelist">
+                    <dirctory-tree-node file="filelist" context="directory-context"></dirctory-tree-node>
                 </div>
+                
+                <ul id="file-context" class="dropdown-menu">
+                    <li><a ng-click="rename()">ファイル名変更</a></li>
+                    <li><a ng-click="delete()">ファイル削除</a></li>
+                </ul>
+                <ul id="directory-context" class="dropdown-menu">
+                    <li><a ng-click="newFile()">新規ファイル作成</a></li>
+                </ul>
             </div>
             <div id='editor-area' ng-controller="textEditorController">
                 <div class="tabbable"> 
