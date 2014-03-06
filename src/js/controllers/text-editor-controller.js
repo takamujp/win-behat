@@ -100,6 +100,12 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
         $scope.select(id);
     });
     
+    $scope.$on('deleteAlreadyOpenFile', function(event, id) {
+        $scope.editFilelist[id].lastText = $scope.editFilelist[id].text;
+        $scope.close(id);
+        $scope.$apply();
+    });
+    
     /**
      * ファイルを閉じる
      * 

@@ -2,7 +2,7 @@
 angular.module('winbehat').factory('editFilelistService', function () {    
     var fs = require('fs'),
         path = require('path'),
-        ext_list = require('./js/my-modules/filename-extension-list'),
+        extList = require('./js/my-modules/filename-extension-list'),
         list = [];
     
     var push = function (file_path) {
@@ -30,7 +30,7 @@ angular.module('winbehat').factory('editFilelistService', function () {
             text: text,
             lastText: '',
             history: null,
-            mode: ext_list[path.extname(file_path).split('.').pop()],
+            mode: extList[path.extname(file_path).split('.').pop()],
             save: function (callback) {
                 if (this.text == null) {
                     callback && callback(new Error('text undefined'));
@@ -77,12 +77,32 @@ angular.module('winbehat').factory('editFilelistService', function () {
         
         return list[id];
     };
+    
+    var rename = function (id, path) {
+        list[id].path = path;
+        list[id].name = path.split('\\').pop();
+    };
+    
+    var getId = function (file_path) {
+        var i = 0,
+            len = 0;
+    
+        for (i = 0, len = list.length; i < len; i++) {
+            if (list[i].path == file_path) {
+                return i;
+            }
+        }
+        
+        return -1;
+    };
         
     return {
         list: list,
         push: push,
         remove: remove,
-        select: select
+        select: select,
+        rename: rename,
+        getId: getId
     };
 });
 

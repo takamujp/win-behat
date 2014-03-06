@@ -9,6 +9,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     $scope.filelist = {};
     $scope.hasFilelist = false;
     $scope.hasFeatures = false;
+    var fs = require('fs');
     /**
      * ディレクトリの階層情報を読み込む
      * 
@@ -20,7 +21,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       }
       // ディレクトリ直下のファイルの一覧を取得する
       filelistService.read(element.files[0].path, function (filelist) {
-        var i = 0, len = 0, hasFeatures = false;
+        var i = 0, len = 0, hasFeatures = false, modalInstance = null;
         if (filelist) {
           for (i = 0, len = filelist.children.length; i < len; i++) {
             if (filelist.children[i].name.split('\\').pop() == 'features') {
@@ -112,6 +113,87 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         'icon-file': !element.item.isDirectory,
         'tree-icon': true
       };
+    };
+    /**
+     * ファイルを削除する
+     */
+    $scope.deleteFile = function () {
+      var modalInstance = null;
+      modalInstance = modalService.openModal('template/modal/confirm.html', false, {
+        'yesLabel': '\u306f\u3044',
+        'noLabel': '\u3044\u3044\u3048',
+        'hideCancel': true,
+        'title': '\u30d5\u30a1\u30a4\u30eb\u524a\u9664\u78ba\u8a8d',
+        'message': '\u30d5\u30a1\u30a4\u30eb\u3092\u524a\u9664\u3057\u307e\u3059\u304b\uff1f'
+      });
+      modalInstance.result.then(function (result) {
+        if (result.selected == 'ok') {
+          fs.unlink($scope.contextTarget.file.name, function (err) {
+            if (err) {
+              modalService.openModal('template/modal/error.html', true, {
+                title: '\u30d5\u30a1\u30a4\u30eb\u524a\u9664\u30a8\u30e9\u30fc',
+                message: err.message
+              });
+              return;
+            }
+            var id = editFilelistService.getId($scope.contextTarget.file.name);
+            if (id >= 0) {
+              $rootScope.$broadcast('deleteAlreadyOpenFile', id);
+            }
+            $scope.contextTarget.parent.children.splice($scope.contextTarget.index, 1);
+            $scope.$apply();
+          });
+        }
+      });
+    };
+    /**
+     * ファイル名を変更する
+     */
+    $scope.renameFile = function () {
+      var modalInstance = null;
+      modalInstance = modalService.openModal('template/modal/input.html', false, {
+        title: '\u30d5\u30a1\u30a4\u30eb\u540d\u5909\u66f4',
+        label: '\u30d5\u30a1\u30a4\u30eb\u540d'
+      });
+      modalInstance.result.then(function (result) {
+        var oldPath = '', newPath = '';
+        if (result.selected == 'ok' && result.params.inputValue) {
+          if (/[\\\/\:\*\?"<>\|]/.test(result.params.inputValue)) {
+            modalService.openModal('template/modal/error.html', true, {
+              title: '\u30d5\u30a1\u30a4\u30eb\u540d\u5909\u66f4\u30a8\u30e9\u30fc',
+              message: '\u30d5\u30a1\u30a4\u30eb\u540d\u306b /:*?"<>| \u306f\u4f7f\u7528\u3067\u304d\u307e\u305b\u3093'
+            });
+            return;
+          }
+          oldPath = $scope.contextTarget.file.name;
+          newPath = $scope.contextTarget.file.name.split('\\');
+          newPath.pop();
+          newPath.push(result.params.inputValue);
+          newPath = newPath.join('\\');
+          if (fs.existsSync(newPath)) {
+            modalService.openModal('template/modal/error.html', true, {
+              title: '\u30d5\u30a1\u30a4\u30eb\u540d\u5909\u66f4\u30a8\u30e9\u30fc',
+              message: '\u3059\u3067\u306b\u5b58\u5728\u3059\u308b\u30d5\u30a1\u30a4\u30eb\u540d\u3067\u3059'
+            });
+            return;
+          }
+          fs.rename(oldPath, newPath, function (err) {
+            if (err) {
+              modalService.openModal('template/modal/error.html', true, {
+                title: '\u30d5\u30a1\u30a4\u30eb\u540d\u5909\u66f4\u30a8\u30e9\u30fc',
+                message: err.message
+              });
+              return;
+            }
+            var id = editFilelistService.getId(oldPath);
+            if (id >= 0) {
+              editFilelistService.rename(id, newPath);
+            }
+            $scope.contextTarget.file.name = newPath;
+            $scope.$apply();
+          });
+        }
+      });
     };
   }
 ]);angular.module('winbehat').controller('menuController', [
@@ -230,6 +312,11 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     $scope.$on('selectAlreadyOpenFile', function (event, id) {
       $scope.select(id);
     });
+    $scope.$on('deleteAlreadyOpenFile', function (event, id) {
+      $scope.editFilelist[id].lastText = $scope.editFilelist[id].text;
+      $scope.close(id);
+      $scope.$apply();
+    });
     /**
      * ファイルを閉じる
      * 
@@ -311,7 +398,11 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
           ul.css({ 'display': 'none' });
           contexts[iAttrs.context] = ul;
           $(iElement).on('contextmenu', function (event) {
-            angular.element($('#directory-tree')).scope().contextTarget = scope.file.children[scope.$index];
+            angular.element($('#directory-tree')).scope().contextTarget = {
+              parent: scope.file,
+              index: scope.$index,
+              file: scope.file.children[scope.$index]
+            };
             hide();
             ul.css({
               position: 'fixed',
@@ -445,7 +536,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     'changeMode': changeMode
   };
 });angular.module('winbehat').factory('editFilelistService', function () {
-  var fs = require('fs'), path = require('path'), ext_list = require('./js/my-modules/filename-extension-list'), list = [];
+  var fs = require('fs'), path = require('path'), extList = require('./js/my-modules/filename-extension-list'), list = [];
   var push = function (file_path) {
     var text = '', i = 0, len = list.length;
     for (; i < len; i++) {
@@ -465,7 +556,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       text: text,
       lastText: '',
       history: null,
-      mode: ext_list[path.extname(file_path).split('.').pop()],
+      mode: extList[path.extname(file_path).split('.').pop()],
       save: function (callback) {
         if (this.text == null) {
           callback && callback(new Error('text undefined'));
@@ -502,11 +593,26 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     list[id] && (list[id].isSelected = true);
     return list[id];
   };
+  var rename = function (id, path) {
+    list[id].path = path;
+    list[id].name = path.split('\\').pop();
+  };
+  var getId = function (file_path) {
+    var i = 0, len = 0;
+    for (i = 0, len = list.length; i < len; i++) {
+      if (list[i].path == file_path) {
+        return i;
+      }
+    }
+    return -1;
+  };
   return {
     list: list,
     push: push,
     remove: remove,
-    select: select
+    select: select,
+    rename: rename,
+    getId: getId
   };
 });angular.module('winbehat').factory('filelistService', function () {
   return require('./js/my-modules/filelist');

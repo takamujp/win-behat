@@ -4,6 +4,8 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
     $scope.hasFilelist = false;
     $scope.hasFeatures = false;
 
+    var fs = require('fs');
+
     /**
      * ディレクトリの階層情報を読み込む
      * 
@@ -19,7 +21,8 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
         filelistService.read(element.files[0].path, function (filelist) {
             var i = 0, 
                 len = 0,
-                hasFeatures = false;
+                hasFeatures = false,
+                modalInstance = null;
 
             if (filelist) {
                 for (i = 0, len = filelist.children.length; i < len; i++) {
@@ -118,5 +121,106 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
             'icon-file': !element.item.isDirectory,
             'tree-icon': true
         };
+    };
+    
+    
+    /**
+     * ファイルを削除する
+     */
+    $scope.deleteFile = function () {
+        var modalInstance = null;
+        
+        modalInstance = modalService.openModal('template/modal/confirm.html', false, {
+            'yesLabel': 'はい',
+            'noLabel': 'いいえ',
+            'hideCancel': true,
+            'title': 'ファイル削除確認',
+            'message': 'ファイルを削除しますか？'
+        });
+        modalInstance.result.then(function (result) {
+            if (result.selected == 'ok') {
+                fs.unlink($scope.contextTarget.file.name, function (err) {
+                    if (err) {
+                        modalService.openModal('template/modal/error.html', true, {
+                            title: 'ファイル削除エラー',
+                            message: err.message
+                        });
+
+                        return;
+                    }
+                    var id = editFilelistService.getId($scope.contextTarget.file.name);
+
+                    if (id >= 0) {
+                        $rootScope.$broadcast('deleteAlreadyOpenFile', id);
+                    }
+
+
+                    $scope.contextTarget.parent.children.splice($scope.contextTarget.index, 1);
+                    $scope.$apply();
+
+                });
+            } 
+        });
+    };
+    
+    /**
+     * ファイル名を変更する
+     */
+    $scope.renameFile = function () {
+        var modalInstance = null;
+        
+        modalInstance = modalService.openModal('template/modal/input.html', false, {
+            title: 'ファイル名変更',
+            label: 'ファイル名'
+        });
+        
+        modalInstance.result.then(function (result) {
+            var oldPath = '',
+                newPath = '';
+            
+            if (result.selected == 'ok' && result.params.inputValue) {
+                
+                if (/[\\\/\:\*\?"<>\|]/.test(result.params.inputValue)) {
+                    modalService.openModal('template/modal/error.html', true, {
+                        title: 'ファイル名変更エラー',
+                        message: 'ファイル名に \/:*?"<>| は使用できません'
+                    });
+                    return;
+                }
+                
+                oldPath = $scope.contextTarget.file.name;
+                newPath = $scope.contextTarget.file.name.split('\\');
+                newPath.pop();
+                newPath.push(result.params.inputValue);
+                newPath = newPath.join('\\');
+                
+                if (fs.existsSync(newPath)) {
+                    modalService.openModal('template/modal/error.html', true, {
+                        title: 'ファイル名変更エラー',
+                        message: 'すでに存在するファイル名です'
+                    });
+                    return;
+                }
+                
+                fs.rename(oldPath, newPath, function (err) {
+                    if (err) {
+                        modalService.openModal('template/modal/error.html', true, {
+                            title: 'ファイル名変更エラー',
+                            message: err.message
+                        });
+                        return;
+                    }
+                    
+                    var id = editFilelistService.getId(oldPath);
+            
+                    if (id >= 0) {
+                        editFilelistService.rename(id, newPath);
+                    }
+                   
+                    $scope.contextTarget.file.name = newPath;
+                    $scope.$apply();
+                });
+            }
+        });
     };
 });

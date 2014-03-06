@@ -119,6 +119,10 @@ body {
     color: #E7E7E7;
 }
 
+input {
+    color: black;
+}
+
 
 /*スクロールバー*/
 .custom-scrollbar::-webkit-scrollbar, .CodeMirror-vscrollbar::-webkit-scrollbar, .CodeMirror-hscrollbar::-webkit-scrollbar
