@@ -1,6 +1,10 @@
 var fs = require('fs');
 var path = require('path');
 
+function File (path) {
+    return {name: path, isDirectory: false, isShow: false, isOpen: false};
+}
+
 function ReadFileList (base_dir, recursive, callback) {
 
     if (!callback) {
@@ -8,7 +12,8 @@ function ReadFileList (base_dir, recursive, callback) {
         recursive = null;
     }
 
-    var pathlist = {name: base_dir, isDirectory: false, isShow: false, isOpen: !!recursive};
+    var pathlist = File(base_dir);
+    pathlist.isOpen = !!recursive;
 
     if (!base_dir || !fs.existsSync(base_dir)) {
         callback(null);
@@ -62,10 +67,12 @@ function ReadFileList (base_dir, recursive, callback) {
 }
 
 function ReadFileListSync (base_dir, recursive) {
-    var pathlist = {name: base_dir, isDirectory: false, isShow: false, isOpen: !!recursive},
-    filelist = null,
-            child_dir = '',
-            child_pathlist = null;
+    var pathlist = File(base_dir),
+        filelist = null,
+        child_dir = '',
+        child_pathlist = null;
+
+    pathlist.isOpen = !!recursive;
 
     if (!base_dir || !fs.existsSync(base_dir)) {
         return null;
@@ -107,5 +114,7 @@ function SortFileList (a, b) {
 
 module.exports = {
     read: ReadFileList,
-    readSync: ReadFileListSync
+    readSync: ReadFileListSync,
+    file: File,
+    sortFunc: SortFileList
 };

@@ -21,7 +21,7 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
             'Ctrl-/': 'toggleComment',
             'Tab': codeMirrorService.insertTab,
             'Ctrl-Space': codeMirrorService.autocomplete,
-            'Ctrl-S': function () {save();}
+            'Ctrl-S': function () {_save();}
         },
         onLoad: function (cm) {
             $scope.codeMirror = cm;
@@ -51,7 +51,7 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
      */
     $scope.isBold = function (file) {
         return {
-            'bold': file.isChanged()
+            'bold': $scope.editFile == file ? file.lastText != $scope.codeMirror.getValue() : file.isChanged()
         };
     };
     
@@ -114,6 +114,8 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
     $scope.close = function (index) {
         
         var modalInstance = null,
+            // 保存直後に編集中のファイルを閉じようとすると、何故か$scope.editFile.textが空の文字列になる場合があるので、その場合はcodeMirrorの現在の値と比較するようにする
+            text = ($scope.editFilelist[index] == $scope.editFile) ? $scope.codeMirror.getValue() : $scope.editFilelist[index].text,
             close = function () {
                 var file = editFilelistService.remove(index);
 
@@ -122,7 +124,7 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
                 }
             };
         
-        if ($scope.editFilelist[index].text != $scope.editFilelist[index].lastText) {
+        if (text != $scope.editFilelist[index].lastText) {
             modalInstance = modalService.openModal('template/modal/confirm.html', false, {
                 'yesLabel': '保存して閉じる',
                 'noLabel': '保存せずに閉じる',
@@ -132,7 +134,7 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
             });
             modalInstance.result.then(function (result) {
                 if (result.selected == 'ok') {
-                    save(function (err) {
+                    _save(function (err) {
                         if (err) {
                             modalService.openModal('template/modal/error.html', true, {
                                 title: 'ファイル保存エラー',
@@ -158,8 +160,8 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
      * 
      * @param {object} file
      */
-    var save = function (callback) {
-        if (!$scope.editFile.path || !$scope.editFile.isChanged()) {
+    var _save = function (callback) {
+        if (!$scope.editFile.path || $scope.editFile.lastText == $scope.codeMirror.getValue()) {
             return;
         }
         $scope.editFile.text = $scope.codeMirror.getValue();

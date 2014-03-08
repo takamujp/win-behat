@@ -22,7 +22,7 @@ angular.module('winbehat').factory('editFilelistService', function () {
             return new Error(file_path + ' not found.');
         }
 
-        text = fs.readFileSync(file_path, {encoding: 'utf-8'});
+        text = fs.readFileSync(file_path, {encoding: 'utf8'});
         list.push({
             path: file_path,
             name: file_path.split('\\').pop(),
@@ -37,14 +37,27 @@ angular.module('winbehat').factory('editFilelistService', function () {
                     return;
                 }
 
-                fs.writeFile(this.path, this.text, function (err) {
-                    if (err && callback) {
+                fs.open(this.path, 'w', '0777', function (err, fd) {
+                    if (err) {
                         callback(err);
                         return;
                     }
 
-                    this.lastText = this.text;
-                    callback && callback();
+                    // 改行なしの日本語を保存すると文字化けするので、1行以下の場合改行させる
+                    var text = this.text;
+                    if (text.split("\n").length <= 1) {
+                        text += "\n";
+                    }
+
+                    fs.write(fd, new Buffer(text), 0, Buffer.byteLength(text), function (err) {
+                        if (err) {
+                            callback(err);
+                            return;
+                        }
+                        fs.close(fd);
+                        this.lastText = this.text;
+                        callback();
+                    }.bind(this));
                 }.bind(this));
             },
             isChanged: function () {

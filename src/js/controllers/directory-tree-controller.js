@@ -82,15 +82,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
             if (element.item.isOpen) {
                 element.item.isShow = !element.item.isShow;
             } else {
-                filelistService.read(element.item.name, function (filelist) {
-                    $scope.$apply(function () {
-                        if (filelist) {
-                            element.item.children = filelist.children;
-                        }
-                        element.item.isOpen = true;
-                        element.item.isShow = true;
-                    });
-                });
+                _readDirectory(element.item);
             }
         } else { // ファイルならエディタを開く
             result = editFilelistService.push(element.item.name);
@@ -106,6 +98,24 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                 }
             }
         }
+    };
+    
+    
+    /**
+     * ディレクトリの子要素を読み込む
+     * 
+     * @param {object} directory
+     */
+    var _readDirectory = function (directory) {
+        filelistService.read(directory.name, function (filelist) {
+            $scope.$apply(function () {
+                if (filelist) {
+                    directory.children = filelist.children;
+                }
+                directory.isOpen = true;
+                directory.isShow = true;
+            });
+        });
     };
     
     /**
@@ -223,4 +233,65 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
             }
         });
     };
+    
+    /**
+     * 新規ファイル作成
+     */
+    $scope.createFile = function () {
+        var modalInstance = null;
+        
+        modalInstance = modalService.openModal('template/modal/input.html', false, {
+            title: '新規ファイル作成',
+            label: 'ファイル名'
+        });
+        
+        modalInstance.result.then(function (result) {
+            var directory = $scope.contextTarget.file,
+                filename = directory.name;
+            
+            if (result.selected == 'ok' && result.params.inputValue) {
+                if (/[\\\/\:\*\?"<>\|]/.test(result.params.inputValue)) {
+                    modalService.openModal('template/modal/error.html', true, {
+                        title: 'ファイル名変更エラー',
+                        message: 'ファイル名に \/:*?"<>| は使用できません'
+                    });
+                    return;
+                }
+            }
+            
+            filename += ('\\' + result.params.inputValue);            
+            
+            fs.open(filename, 'wx', '0777', function (err, fd) {
+                if (err) {
+                    modalService.openModal('template/modal/error.html', true, {
+                        title: '新規ファイル作成エラー',
+                        message: err.code == 'EEXIST' ? 'すでにファイルが存在します' : err.message
+                    });
+                    return;
+                }
+                
+                fs.write(fd, new Buffer(''), 0, Buffer.byteLength(''), function (err) {
+                    if (err) {
+                        modalService.openModal('template/modal/error.html', true, {
+                            title: '新規ファイル作成エラー',
+                            message: err.message
+                        });
+                        return;
+                    }
+                    fs.close(fd);
+                    
+                    file = filelistService.file(filename);
+                
+                    if (directory.isOpen) {
+                        directory.children.push(file);
+                        directory.children = directory.children.sort(filelistService.sortFunc);
+                        directory.isShow = true;
+                        $scope.$apply();
+                    } else {
+                        _readDirectory(directory);
+                    }
+                });
+            });
+        });
+    }; 
 });
