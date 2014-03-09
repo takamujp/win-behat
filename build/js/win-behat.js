@@ -341,7 +341,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
           });
           return;
         }
-        if (stdout) {
+        if (stdout.replace(/[\n|\r]/g, '')) {
           _openBlankWindow('<pre>' + stdout + '</pre>');
         } else {
           modalService.openModal('template/modal/error.html', true, {

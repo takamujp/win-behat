@@ -401,7 +401,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                 return;
             }
             
-            if (stdout) {
+            if (stdout.replace(/[\n|\r]/g, '')) {
                 _openBlankWindow('<pre>' + stdout + '</pre>');
             } else {
                 modalService.openModal('template/modal/error.html', true, {
