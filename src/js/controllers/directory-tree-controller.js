@@ -433,4 +433,25 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
         var win = $window.open('', '_blank');
         $(win.document.body).html(message);  
     };
+    
+    $scope.refreshFolder = function () {
+        var parent = $scope.contextTarget.parent,
+            index = $scope.contextTarget.index,
+            file = $scope.contextTarget.file;
+    
+        if (!file.isDirectory || !file.isOpen) {
+            return;
+        }
+        
+        filelistService.read(file.name, function (filelist) {
+            if (filelist) {
+                parent.children[index] = filelist;
+            } else {
+                parent.children.splice(index, 1);
+            }
+            
+            $scope.$apply();
+        });
+    };
+    
 });

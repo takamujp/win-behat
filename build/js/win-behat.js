@@ -370,6 +370,20 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       var win = $window.open('', '_blank');
       $(win.document.body).html(message);
     };
+    $scope.refreshFolder = function () {
+      var parent = $scope.contextTarget.parent, index = $scope.contextTarget.index, file = $scope.contextTarget.file;
+      if (!file.isDirectory || !file.isOpen) {
+        return;
+      }
+      filelistService.read(file.name, function (filelist) {
+        if (filelist) {
+          parent.children[index] = filelist;
+        } else {
+          parent.children.splice(index, 1);
+        }
+        $scope.$apply();
+      });
+    };
   }
 ]);angular.module('winbehat').controller('menuController', [
   '$scope',
@@ -491,8 +505,10 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       }
       window.dispatchEvent(new Event('changeTab'));
       $scope.editFile = selected;
+      // modeによってCodeMirrorのオプションを切り替える
       $scope.codeMirror.setOption('mode', selected.mode || '');
       selected.mode && CodeMirror.autoLoadMode($scope.codeMirror, selected.mode);
+      $scope.codeMirror.setOption('indentUnit', selected.mode == 'gherkin' ? 2 : 4);
       // 「space」を入力すると何故か$scope.editFile.textがundefinedになり、
       // タブ切り替えで元のタブに戻した時にテキストが表示されなくなってしまうので、
       // このタイミングでtextをCodeMirrorから取得しておく

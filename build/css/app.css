@@ -59,6 +59,10 @@ body {
     height: 100%;
 }
 
+#directory-tree span, #directory-tree pre , #menu-bar a, .dropdown-menu a {
+    cursor: context-menu;
+}
+
 /*エディター*/
 #editor-area {
     position: absolute; 
