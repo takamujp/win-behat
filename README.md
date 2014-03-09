@@ -12,7 +12,7 @@ windows用のbehatのGUI
 
 * php5.3以上をインストールされていて環境変数にパスが通っていること
 
-[ここ](https://owncloud.sharuru07.jp/owncloud/public.php?service=files&t=e8b67cb88fa8c29aef963206daa699ae)からwin-behatをダウンロードして解凍、解凍したディレクトリにあるwin-behat.exeを実行
+[ここ](http://mumu.sharuru07.jp/download/win-behat.zip)からwin-behatをダウンロードして解凍、解凍したディレクトリにあるwin-behat.exeを実行
 
 behatがインストールされていない場合は、内蔵しているbehat(v2.4)を使用するので、  
 別のバージョンを使用したい場合は、behatをインストールしてパスを通しておくと、パスが通っている方を使用するようになる
