@@ -5,7 +5,7 @@
   "window": {
     "title": "win-behat",
     "icon": "",
-    "toolbar": true,
+    "toolbar": false,
     "frame": true,
     "width": 960,
     "height": 640,
