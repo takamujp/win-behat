@@ -26,5 +26,5 @@ behatがインストールされていない場合は、内蔵しているbehat(
 4. 解凍したディレクトリに、win-behat.nwを配置
 5. コマンドプロンプで以下のコマンド実行  
 ```
-cd win-behatのディレクトリ &
+cd win-behatのディレクトリ
 copy /b nw.exe+win-behat.nw win-behat.exe nw.exe
