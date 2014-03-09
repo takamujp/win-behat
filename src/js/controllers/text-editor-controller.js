@@ -71,8 +71,10 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
         window.dispatchEvent(new Event('changeTab'));
         $scope.editFile = selected;
         
+        // modeによってCodeMirrorのオプションを切り替える
         $scope.codeMirror.setOption('mode', selected.mode || '');
         selected.mode && CodeMirror.autoLoadMode($scope.codeMirror, selected.mode);
+        $scope.codeMirror.setOption('indentUnit', selected.mode == 'gherkin' ? 2 : 4);
         
         // 「space」を入力すると何故か$scope.editFile.textがundefinedになり、
         // タブ切り替えで元のタブに戻した時にテキストが表示されなくなってしまうので、
