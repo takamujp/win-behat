@@ -1,15 +1,16 @@
 angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('winbehat').controller('directoryTreeController', [
   '$scope',
   '$rootScope',
+  '$window',
   'filelistService',
   'editFilelistService',
   'modalService',
   'behatService',
-  function ($scope, $rootScope, filelistService, editFilelistService, modalService, behatService) {
+  function ($scope, $rootScope, $window, filelistService, editFilelistService, modalService, behatService) {
     $scope.filelist = {};
     $scope.hasFilelist = false;
     $scope.hasFeatures = false;
-    var fs = require('fs');
+    var fs = require('fs'), gui = require('nw.gui'), TMP_PATH = 'tmp/', PROHIBITED_CHARACTER = /[\\\/\:\*\?"<>\|]/g;
     /**
      * ディレクトリの階層情報を読み込む
      * 
@@ -19,6 +20,8 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       if (!element.files[0]) {
         return;
       }
+      $scope.hasFilelist = false;
+      $scope.hasFeatures = false;
       // ディレクトリ直下のファイルの一覧を取得する
       filelistService.read(element.files[0].path, function (filelist) {
         var i = 0, len = 0, hasFeatures = false, modalInstance = null;
@@ -34,6 +37,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
             $scope.$apply(function () {
               $scope.filelist = filelist;
               $scope.hasFilelist = true;
+              $scope.hasFeatures = true;
             });
           }  // 存在しない場合
           else {
@@ -166,7 +170,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       modalInstance.result.then(function (result) {
         var oldPath = '', newPath = '';
         if (result.selected == 'ok' && result.params.inputValue) {
-          if (/[\\\/\:\*\?"<>\|]/.test(result.params.inputValue)) {
+          if (PROHIBITED_CHARACTER.test(result.params.inputValue)) {
             modalService.openModal('template/modal/error.html', true, {
               title: '\u30d5\u30a1\u30a4\u30eb\u540d\u5909\u66f4\u30a8\u30e9\u30fc',
               message: '\u30d5\u30a1\u30a4\u30eb\u540d\u306b /:*?"<>| \u306f\u4f7f\u7528\u3067\u304d\u307e\u305b\u3093'
@@ -215,7 +219,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       modalInstance.result.then(function (result) {
         var directory = $scope.contextTarget.file, filename = directory.name;
         if (result.selected == 'ok' && result.params.inputValue) {
-          if (/[\\\/\:\*\?"<>\|]/.test(result.params.inputValue)) {
+          if (PROHIBITED_CHARACTER.test(result.params.inputValue)) {
             modalService.openModal('template/modal/error.html', true, {
               title: '\u30d5\u30a1\u30a4\u30eb\u540d\u5909\u66f4\u30a8\u30e9\u30fc',
               message: '\u30d5\u30a1\u30a4\u30eb\u540d\u306b /:*?"<>| \u306f\u4f7f\u7528\u3067\u304d\u307e\u305b\u3093'
@@ -233,6 +237,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
             return;
           }
           fs.write(fd, new Buffer(''), 0, Buffer.byteLength(''), function (err) {
+            fs.close(fd);
             if (err) {
               modalService.openModal('template/modal/error.html', true, {
                 title: '\u65b0\u898f\u30d5\u30a1\u30a4\u30eb\u4f5c\u6210\u30a8\u30e9\u30fc',
@@ -240,7 +245,6 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
               });
               return;
             }
-            fs.close(fd);
             file = filelistService.file(filename);
             if (directory.isOpen) {
               directory.children.push(file);
@@ -254,17 +258,145 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         });
       });
     };
+    /**
+     * behat実行
+     * 
+     * @param {string} features 実行対象のfeatureファイル・ディレクトリのパス
+     */
+    var _runBehat = function (features) {
+      if (!$scope.hasFeatures) {
+        return;
+      }
+      behatService.run($scope.filelist.name, '-f html', features, function (err, stdout, stderr) {
+        var filename = '';
+        if (err) {
+          if (stdout) {
+            _openBlankWindow('<pre>' + stdout + '</pre>');
+          } else {
+            modalService.openModal('template/modal/error.html', true, {
+              title: 'behat\u5b9f\u884c\u30a8\u30e9\u30fc',
+              message: stderr || err.message
+            });
+          }
+          return;
+        }
+        filename = TMP_PATH + ($scope.filelist.name + features + '.html').replace(PROHIBITED_CHARACTER, '');
+        var faildCreateFile = function () {
+          fs.unlink('build/' + filename, function (err) {
+          });
+          _openBlankWindow(stdout);
+        };
+        fs.open('build/' + filename, 'w', '0777', function (err, fd) {
+          if (err) {
+            faildCreateFile();
+            return;
+          }
+          fs.write(fd, new Buffer(stdout), 0, Buffer.byteLength(stdout), function (err) {
+            var win = null;
+            fs.close(fd);
+            if (err) {
+              faildCreateFile();
+              return;
+            }
+            win = gui.Window.get($window.open(filename));
+            win.on('closed', function () {
+              win = null;
+              fs.unlink('build/' + filename, function (err) {
+              });
+            });
+          });
+        });
+      });
+    };
+    /**
+     * behat実行(contextメニューから)
+     */
+    $scope.runBehat = function () {
+      _runBehat($scope.contextTarget.file.name);
+    };
+    /**
+     * behat実行(イベントが発行されたら)
+     */
+    $scope.$on('runBehat', function (event, features) {
+      features = features || '';
+      _runBehat(features);
+    });
+    /**
+     * behatを実行して、未定義のステップを表示する
+     * 
+     * @param {string} features 実行対象のfeatureファイル・ディレクトリのパス
+     */
+    var _showSnippets = function (features) {
+      if (!$scope.hasFeatures) {
+        return;
+      }
+      behatService.run($scope.filelist.name, '-f snippets', features, function (err, stdout, stderr) {
+        if (err && !stdout) {
+          modalService.openModal('template/modal/error.html', true, {
+            title: 'behat\u5b9f\u884c\u30a8\u30e9\u30fc',
+            message: stderr || err.message
+          });
+          return;
+        }
+        if (stdout) {
+          _openBlankWindow('<pre>' + stdout + '</pre>');
+        } else {
+          modalService.openModal('template/modal/error.html', true, {
+            title: '\u30b9\u30c6\u30c3\u30d7\u8868\u793a\u30a8\u30e9\u30fc',
+            message: '\u672a\u5b9a\u7fa9\u306e\u30b9\u30c6\u30c3\u30d7\u306f\u3042\u308a\u307e\u305b\u3093\u3067\u3057\u305f'
+          });
+        }
+      });
+    };
+    /**
+     * 未定義のステップを表示する(contextメニューから)
+     */
+    $scope.showSnippets = function () {
+      _showSnippets($scope.contextTarget.file.name);
+    };
+    /**
+     * 未定義のステップを表示する(イベントが発行されたら)
+     */
+    $scope.$on('showSnippets', function (event, features) {
+      features = features || '';
+      _showSnippets(features);
+    });
+    /**
+     * windowをblankで開く
+     * 
+     * @param {string} message 表示する内容(html5)
+     */
+    var _openBlankWindow = function (message) {
+      var win = $window.open('', '_blank');
+      $(win.document.body).html(message);
+    };
   }
 ]);angular.module('winbehat').controller('menuController', [
   '$scope',
   '$rootScope',
   function ($scope, $rootScope) {
-    var CATEGORY = { FILE: '\u30d5\u30a1\u30a4\u30eb' };
-    var ACTION = { OPEN_PROJECT: '\u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u3092\u958b\u304f' };
-    $scope.menuItems = [{
+    var CATEGORY = {
+        FILE: '\u30d5\u30a1\u30a4\u30eb',
+        BEHAT: 'behat'
+      };
+    var ACTION = {
+        OPEN_PROJECT: '\u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u3092\u958b\u304f',
+        RUN: '\u5b9f\u884c',
+        SNIPPETS: '\u672a\u5b9a\u7fa9\u306e\u30b9\u30c6\u30c3\u30d7\u3092\u8868\u793a'
+      };
+    $scope.menuItems = [
+      {
         label: CATEGORY.FILE,
         items: [{ label: ACTION.OPEN_PROJECT }]
-      }];
+      },
+      {
+        label: CATEGORY.BEHAT,
+        items: [
+          { label: ACTION.RUN },
+          { label: ACTION.SNIPPETS }
+        ]
+      }
+    ];
     $scope.clickItem = function (category, action) {
       if (category == CATEGORY.FILE) {
         switch (action) {
@@ -272,6 +404,18 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
           setTimeout(function () {
             document.querySelector('#dir-dialog').click();
           }, 0);
+          break;
+        default:
+          break;
+        }
+      }
+      if (category == CATEGORY.BEHAT) {
+        switch (action) {
+        case ACTION.RUN:
+          $rootScope.$broadcast('runBehat');
+          break;
+        case ACTION.SNIPPETS:
+          $rootScope.$broadcast('showSnippets');
           break;
         default:
           break;

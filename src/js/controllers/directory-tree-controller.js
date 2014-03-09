@@ -1,10 +1,13 @@
 
-angular.module('winbehat').controller('directoryTreeController', function ($scope, $rootScope, filelistService, editFilelistService, modalService, behatService) {
+angular.module('winbehat').controller('directoryTreeController', function ($scope, $rootScope, $window, filelistService, editFilelistService, modalService, behatService) {
     $scope.filelist = {};
     $scope.hasFilelist = false;
     $scope.hasFeatures = false;
 
-    var fs = require('fs');
+    var fs = require('fs'),
+        gui = require('nw.gui'),
+        TMP_PATH = 'tmp/',
+        PROHIBITED_CHARACTER = /[\\\/\:\*\?"<>\|]/g;
 
     /**
      * ディレクトリの階層情報を読み込む
@@ -16,6 +19,9 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
         if (!element.files[0]) {
             return;
         }
+        
+        $scope.hasFilelist = false;
+        $scope.hasFeatures = false;
         
         // ディレクトリ直下のファイルの一覧を取得する
         filelistService.read(element.files[0].path, function (filelist) {
@@ -37,6 +43,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                     $scope.$apply(function () {
                         $scope.filelist = filelist;
                         $scope.hasFilelist = true;
+                        $scope.hasFeatures = true;
                     });
                 } 
                 // 存在しない場合
@@ -190,7 +197,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
             
             if (result.selected == 'ok' && result.params.inputValue) {
                 
-                if (/[\\\/\:\*\?"<>\|]/.test(result.params.inputValue)) {
+                if (PROHIBITED_CHARACTER.test(result.params.inputValue)) {
                     modalService.openModal('template/modal/error.html', true, {
                         title: 'ファイル名変更エラー',
                         message: 'ファイル名に \/:*?"<>| は使用できません'
@@ -250,7 +257,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                 filename = directory.name;
             
             if (result.selected == 'ok' && result.params.inputValue) {
-                if (/[\\\/\:\*\?"<>\|]/.test(result.params.inputValue)) {
+                if (PROHIBITED_CHARACTER.test(result.params.inputValue)) {
                     modalService.openModal('template/modal/error.html', true, {
                         title: 'ファイル名変更エラー',
                         message: 'ファイル名に \/:*?"<>| は使用できません'
@@ -271,6 +278,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                 }
                 
                 fs.write(fd, new Buffer(''), 0, Buffer.byteLength(''), function (err) {
+                    fs.close(fd);
                     if (err) {
                         modalService.openModal('template/modal/error.html', true, {
                             title: '新規ファイル作成エラー',
@@ -278,7 +286,6 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                         });
                         return;
                     }
-                    fs.close(fd);
                     
                     file = filelistService.file(filename);
                 
@@ -294,4 +301,136 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
             });
         });
     }; 
+    
+    
+    /**
+     * behat実行
+     * 
+     * @param {string} features 実行対象のfeatureファイル・ディレクトリのパス
+     */
+    var _runBehat = function (features) {
+        if (!$scope.hasFeatures) {
+            return;
+        }
+        
+        behatService.run($scope.filelist.name, '-f html', features, function (err, stdout, stderr) {
+            var filename = '';
+            
+            if (err) {
+                if (stdout) {
+                    _openBlankWindow('<pre>' + stdout + '</pre>');
+                } else {
+                    modalService.openModal('template/modal/error.html', true, {
+                        title: 'behat実行エラー',
+                        message: stderr || err.message
+                    });
+                }
+                return;
+            }
+            
+            filename = TMP_PATH + ($scope.filelist.name + features + '.html').replace(PROHIBITED_CHARACTER, '');
+            
+            var faildCreateFile = function () {
+                fs.unlink('build/' + filename, function (err) {});
+                _openBlankWindow(stdout);
+            };
+            
+            fs.open('build/' + filename, 'w', '0777', function (err, fd) {
+                if (err) {
+                    faildCreateFile();
+                    return;
+                }
+                
+                fs.write(fd, new Buffer(stdout), 0, Buffer.byteLength(stdout), function (err) {
+                    var win = null;
+                    
+                    fs.close(fd);
+                    if (err) {
+                        faildCreateFile();
+                        return;
+                    }
+                    
+                    win = gui.Window.get(
+                        $window.open(filename)
+                    );
+                    
+                     win.on('closed', function() {
+                         win = null;
+                         fs.unlink('build/' + filename, function (err) {});
+                     });
+                });
+            });
+            
+        });
+    };
+    
+    /**
+     * behat実行(contextメニューから)
+     */
+    $scope.runBehat = function () {
+        _runBehat($scope.contextTarget.file.name);
+    };
+    
+    /**
+     * behat実行(イベントが発行されたら)
+     */
+    $scope.$on('runBehat', function(event, features) {
+        features = features || '';
+        _runBehat(features);
+    });
+    
+    /**
+     * behatを実行して、未定義のステップを表示する
+     * 
+     * @param {string} features 実行対象のfeatureファイル・ディレクトリのパス
+     */
+    var _showSnippets = function (features) {
+        if (!$scope.hasFeatures) {
+            return;
+        }
+        
+        behatService.run($scope.filelist.name, '-f snippets', features, function (err, stdout, stderr) {
+            if (err && !stdout) {
+                modalService.openModal('template/modal/error.html', true, {
+                    title: 'behat実行エラー',
+                    message: stderr || err.message
+                });
+                return;
+            }
+            
+            if (stdout) {
+                _openBlankWindow('<pre>' + stdout + '</pre>');
+            } else {
+                modalService.openModal('template/modal/error.html', true, {
+                    title: 'ステップ表示エラー',
+                    message: '未定義のステップはありませんでした'
+                });
+            }
+        });
+    };
+    
+    /**
+     * 未定義のステップを表示する(contextメニューから)
+     */
+    $scope.showSnippets = function () {
+        _showSnippets($scope.contextTarget.file.name);
+    };
+    
+    /**
+     * 未定義のステップを表示する(イベントが発行されたら)
+     */
+    $scope.$on('showSnippets', function(event, features) {
+        features = features || '';
+        _showSnippets(features);
+    });
+    
+    /**
+     * windowをblankで開く
+     * 
+     * @param {string} message 表示する内容(html5)
+     */
+    var _openBlankWindow = function (message) {
+        var win = $window.open('', '_blank');
+        $(win.document.body).html(message);  
+    };
 });

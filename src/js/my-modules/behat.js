@@ -51,8 +51,8 @@ var Behat = {
             callback(err, stdout, stderr);
         });
     },
-    run: function (project_dir, features, callback) {
-        RunBehat(project_dir, '', features, function (err, stdout, stderr) {
+    run: function (project_dir, options, features, callback) {
+        RunBehat(project_dir, options, features, function (err, stdout, stderr) {
             callback(err, stdout, stderr);
         });
     }

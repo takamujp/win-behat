@@ -119,6 +119,10 @@ body {
     color: #E7E7E7;
 }
 
+.dropdown-menu .divider {
+    background-color: #585858;
+}
+
 input {
     color: black;
 }
