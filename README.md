@@ -22,7 +22,7 @@ behatがインストールされていない場合は、内蔵しているbehat(
 --------------
 1. behatディレクトリに、behatをインストールする
 2. behat、build、package.jsonをzipに固めて、拡張子を.nwにする(ここではwin-behat.nwと扱う)
-3. https://github.com/rogerwang/node-webkitからwindow用のnode-webkitをダウンロードして解凍する
+3. https://github.com/rogerwang/node-webkit からwindow用のnode-webkitをダウンロードして解凍する
 4. 解凍したディレクトリに、win-behat.nwを配置
 5. コマンドプロンプで以下のコマンド実行  
 ```
