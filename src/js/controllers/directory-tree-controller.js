@@ -318,14 +318,17 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
             
             if (err) {
                 if (stdout) {
-                    _openBlankWindow('<pre>' + stdout + '</pre>');
+                    if (stdout.indexOf('<!DOCTYPE html')) {
+                        _openBlankWindow('<pre>' + stdout + '</pre>');
+                        return;
+                    }
                 } else {
                     modalService.openModal('template/modal/error.html', true, {
                         title: 'behat実行エラー',
                         message: stderr || err.message
                     });
+                    return;
                 }
-                return;
             }
             
             filename = TMP_PATH + ($scope.filelist.name + features + '.html').replace(PROHIBITED_CHARACTER, '');

@@ -271,14 +271,17 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         var filename = '';
         if (err) {
           if (stdout) {
-            _openBlankWindow('<pre>' + stdout + '</pre>');
+            if (stdout.indexOf('<!DOCTYPE html')) {
+              _openBlankWindow('<pre>' + stdout + '</pre>');
+              return;
+            }
           } else {
             modalService.openModal('template/modal/error.html', true, {
               title: 'behat\u5b9f\u884c\u30a8\u30e9\u30fc',
               message: stderr || err.message
             });
+            return;
           }
-          return;
         }
         filename = TMP_PATH + ($scope.filelist.name + features + '.html').replace(PROHIBITED_CHARACTER, '');
         var faildCreateFile = function () {
