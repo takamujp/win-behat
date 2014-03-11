@@ -622,12 +622,15 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
           ul.css({ 'display': 'none' });
           contexts[iAttrs.context] = ul;
           $(iElement).on('contextmenu', function (event) {
+            hide();
+            if (!scope.file) {
+              return;
+            }
             angular.element($('#directory-tree')).scope().contextTarget = {
               parent: scope.file,
               index: scope.$index,
               file: scope.file.children[scope.$index]
             };
-            hide();
             ul.css({
               position: 'fixed',
               display: 'block',

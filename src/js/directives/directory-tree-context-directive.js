@@ -21,8 +21,11 @@ angular.module('winbehat').directive("context", function () {
                     ul.css({'display': 'none'});
                     contexts[iAttrs.context] = ul;
                     $(iElement).on('contextmenu', function (event) {
-                        angular.element($("#directory-tree")).scope().contextTarget = {parent: scope.file, index: scope.$index, file: scope.file.children[scope.$index]};
                         hide();
+                        if (!scope.file) {
+                            return;
+                        }
+                        angular.element($("#directory-tree")).scope().contextTarget = {parent: scope.file, index: scope.$index, file: scope.file.children[scope.$index]};
                         ul.css({
                             position: "fixed",
                             display: "block",
