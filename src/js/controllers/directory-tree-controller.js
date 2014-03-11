@@ -259,7 +259,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
             if (result.selected == 'ok' && result.params.inputValue) {
                 if (PROHIBITED_CHARACTER.test(result.params.inputValue)) {
                     modalService.openModal('template/modal/error.html', true, {
-                        title: 'ファイル名変更エラー',
+                        title: '新規ファイル作成エラー',
                         message: 'ファイル名に \/:*?"<>| は使用できません'
                     });
                     return;
@@ -287,7 +287,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                         return;
                     }
                     
-                    file = filelistService.file(filename);
+                    var file = filelistService.file(filename);
                 
                     if (directory.isOpen) {
                         directory.children.push(file);
@@ -298,6 +298,59 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                         _readDirectory(directory);
                     }
                 });
+            });
+        });
+    };
+    
+    
+    /**
+     * 新規ディレクトリ作成
+     */
+    $scope.createDirectory = function () {
+        var modalInstance = null;
+        
+        modalInstance = modalService.openModal('template/modal/input.html', false, {
+            title: '新規ディレクトリ作成',
+            label: 'ディレクトリ名'
+        });
+        
+        modalInstance.result.then(function (result) {
+            var directory = $scope.contextTarget.file,
+                dirname = directory.name;
+            
+            if (result.selected == 'ok' && result.params.inputValue) {
+                if (PROHIBITED_CHARACTER.test(result.params.inputValue)) {
+                    modalService.openModal('template/modal/error.html', true, {
+                        title: '新規ディレクトリ作成エラー',
+                        message: 'ディレクトリ名に \/:*?"<>| は使用できません'
+                    });
+                    return;
+                }
+            }
+            
+            dirname += ('\\' + result.params.inputValue);            
+                
+            fs.mkdir(dirname, function (err) {
+                if (err) {
+                    modalService.openModal('template/modal/error.html', true, {
+                        title: '新規ディレクトリ作成エラー',
+                        message: err.code == 'EEXIST' ? 'すでに同名のディレクトリが存在します' : err.message
+                    });
+                    return;
+                }
+
+                var newDirectory = filelistService.file(dirname);
+                newDirectory.isDirectory = true;
+                newDirectory.children = [];
+
+                if (directory.isOpen) {
+                    directory.children.push(newDirectory);
+                    directory.children = directory.children.sort(filelistService.sortFunc);
+                    directory.isShow = true;
+                    $scope.$apply();
+                } else {
+                    _readDirectory(directory);
+                }
             });
         });
     }; 

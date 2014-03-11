@@ -221,7 +221,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         if (result.selected == 'ok' && result.params.inputValue) {
           if (PROHIBITED_CHARACTER.test(result.params.inputValue)) {
             modalService.openModal('template/modal/error.html', true, {
-              title: '\u30d5\u30a1\u30a4\u30eb\u540d\u5909\u66f4\u30a8\u30e9\u30fc',
+              title: '\u65b0\u898f\u30d5\u30a1\u30a4\u30eb\u4f5c\u6210\u30a8\u30e9\u30fc',
               message: '\u30d5\u30a1\u30a4\u30eb\u540d\u306b /:*?"<>| \u306f\u4f7f\u7528\u3067\u304d\u307e\u305b\u3093'
             });
             return;
@@ -245,7 +245,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
               });
               return;
             }
-            file = filelistService.file(filename);
+            var file = filelistService.file(filename);
             if (directory.isOpen) {
               directory.children.push(file);
               directory.children = directory.children.sort(filelistService.sortFunc);
@@ -255,6 +255,49 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
               _readDirectory(directory);
             }
           });
+        });
+      });
+    };
+    /**
+     * 新規ディレクトリ作成
+     */
+    $scope.createDirectory = function () {
+      var modalInstance = null;
+      modalInstance = modalService.openModal('template/modal/input.html', false, {
+        title: '\u65b0\u898f\u30c7\u30a3\u30ec\u30af\u30c8\u30ea\u4f5c\u6210',
+        label: '\u30c7\u30a3\u30ec\u30af\u30c8\u30ea\u540d'
+      });
+      modalInstance.result.then(function (result) {
+        var directory = $scope.contextTarget.file, dirname = directory.name;
+        if (result.selected == 'ok' && result.params.inputValue) {
+          if (PROHIBITED_CHARACTER.test(result.params.inputValue)) {
+            modalService.openModal('template/modal/error.html', true, {
+              title: '\u65b0\u898f\u30c7\u30a3\u30ec\u30af\u30c8\u30ea\u4f5c\u6210\u30a8\u30e9\u30fc',
+              message: '\u30c7\u30a3\u30ec\u30af\u30c8\u30ea\u540d\u306b /:*?"<>| \u306f\u4f7f\u7528\u3067\u304d\u307e\u305b\u3093'
+            });
+            return;
+          }
+        }
+        dirname += '\\' + result.params.inputValue;
+        fs.mkdir(dirname, function (err) {
+          if (err) {
+            modalService.openModal('template/modal/error.html', true, {
+              title: '\u65b0\u898f\u30c7\u30a3\u30ec\u30af\u30c8\u30ea\u4f5c\u6210\u30a8\u30e9\u30fc',
+              message: err.code == 'EEXIST' ? '\u3059\u3067\u306b\u540c\u540d\u306e\u30c7\u30a3\u30ec\u30af\u30c8\u30ea\u304c\u5b58\u5728\u3057\u307e\u3059' : err.message
+            });
+            return;
+          }
+          var newDirectory = filelistService.file(dirname);
+          newDirectory.isDirectory = true;
+          newDirectory.children = [];
+          if (directory.isOpen) {
+            directory.children.push(newDirectory);
+            directory.children = directory.children.sort(filelistService.sortFunc);
+            directory.isShow = true;
+            $scope.$apply();
+          } else {
+            _readDirectory(directory);
+          }
         });
       });
     };
