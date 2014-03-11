@@ -188,7 +188,8 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
         
         modalInstance = modalService.openModal('template/modal/input.html', false, {
             title: 'ファイル名変更',
-            label: 'ファイル名'
+            label: 'ファイル名',
+            inputValue: $scope.contextTarget.file.name.split('\\').pop()
         });
         
         modalInstance.result.then(function (result) {

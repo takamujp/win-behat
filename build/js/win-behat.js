@@ -165,7 +165,8 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       var modalInstance = null;
       modalInstance = modalService.openModal('template/modal/input.html', false, {
         title: '\u30d5\u30a1\u30a4\u30eb\u540d\u5909\u66f4',
-        label: '\u30d5\u30a1\u30a4\u30eb\u540d'
+        label: '\u30d5\u30a1\u30a4\u30eb\u540d',
+        inputValue: $scope.contextTarget.file.name.split('\\').pop()
       });
       modalInstance.result.then(function (result) {
         var oldPath = '', newPath = '';
