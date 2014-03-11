@@ -27,4 +27,4 @@ behatがインストールされていない場合は、内蔵しているbehat(
 5. コマンドプロンプで以下のコマンド実行  
 ```
 cd node-webkitのディレクトリ
-copy /b nw.exe+win-behat.nw win-behat.exe nw.exe
+copy /b nw.exe+win-behat.nw win-behat.exe
