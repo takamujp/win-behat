@@ -850,9 +850,10 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     if (!fs.statSync(base_dir).isDirectory()) {
       if (/.*(Context\.php)$/.test(base_dir)) {
         fs.readFile(base_dir, function (err, data) {
-          behatContexts[base_dir] = data.toString().match(/@Give.*\/\^(.*)\$\//g).map(function (v) {
+          var matches = data.toString().match(/@Give.*\/\^(.*)\$\//g);
+          behatContexts[base_dir] = matches ? matches.map(function (v) {
             return v.replace(/@Give.*\/\^(.*)\$\//, '$1');
-          });
+          }) : [];
         });
       }
       return;
