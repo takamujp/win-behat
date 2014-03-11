@@ -91,6 +91,10 @@ body {
     overflow-x: scroll;
 }
 
+.CodeMirror-hint {
+    max-width: 100%;
+}
+
 /*bootstrap拡張*/
 .modal-content {
     background: #424242;

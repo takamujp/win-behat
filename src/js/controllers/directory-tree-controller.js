@@ -1,5 +1,5 @@
 
-angular.module('winbehat').controller('directoryTreeController', function ($scope, $rootScope, $window, filelistService, editFilelistService, modalService, behatService) {
+angular.module('winbehat').controller('directoryTreeController', function ($scope, $rootScope, $window, filelistService, editFilelistService, modalService, behatService, codeMirrorService) {
     $scope.filelist = {};
     $scope.hasFilelist = false;
     $scope.hasFeatures = false;
@@ -45,6 +45,8 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                         $scope.hasFilelist = true;
                         $scope.hasFeatures = true;
                     });
+                    
+                    codeMirrorService.initBehatHint(filelist.name + '\\features\\bootstrap');
                 } 
                 // 存在しない場合
                 else {

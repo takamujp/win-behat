@@ -2,6 +2,8 @@
 angular.module('winbehat').factory('codeMirrorService', function () {
     
     var fxl = require('./js/my-modules/filename-extension-list');
+    var fs = require('fs');
+    var path = require('path');
     
     /**
      * タブを挿入する
@@ -62,10 +64,95 @@ angular.module('winbehat').factory('codeMirrorService', function () {
         cm.setOption("mode", fxl[ext]);
     };
     
+    var behatContexts = {};
+   
+    CodeMirror.gherkinHint = gherkinHint; // deprecated
+    CodeMirror.registerHelper("hint", "gherkin", gherkinHint);
+    
+    var WORD = /[^\x01-\x7E]|[\w$]+/, RANGE = 500;
+    function gherkinHint(editor, options) {
+        var word = options && options.word || WORD;
+        var cur = editor.getCursor(), curLine = editor.getLine(cur.line);
+        var start = cur.ch, end = start;
+        while (end < curLine.length && word.test(curLine.charAt(end)))
+            ++end;
+        while (start && word.test(curLine.charAt(start - 1)))
+            --start;
+        var curWord = start != end && curLine.slice(start, end);
+
+        var list = [];
+        var behatSteps = getSteps();
+
+        for (var i = 0, len = behatSteps.length; i < len ; i++) {
+//            if (!curWord || behatSteps[i].indexOf(curWord, 0) != -1) {
+             if (!curWord || behatSteps[i].lastIndexOf(curWord, 0) == 0) {
+                 list.push(behatSteps[i]);
+             }
+        }
+        
+        return {list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end)};
+    };
+    
+    function getSteps() {
+        var steps = [];
+        for (var key in behatContexts) {
+            Array.prototype.push.apply(steps, behatContexts[key]);
+        }
+        
+        return steps.sort(function (a, b) { return (a > b) ? 1 : -1; });
+    }
+    
+    function readContextFile (base_dir) {
+        if (!fs.existsSync(base_dir)) {
+            return;
+        }
+
+        if (!fs.statSync(base_dir).isDirectory()) {
+
+            if (/.*(Context\.php)$/.test(base_dir)) {
+                fs.readFile(base_dir, function (err, data) {
+                    behatContexts[base_dir] = data.toString().match(/@Give.*\/\^(.*)\$\//g).map(function (v) {return v.replace(/@Give.*\/\^(.*)\$\//, '$1')});
+                })
+            }
+            return;
+        }
+
+        fs.readdir(base_dir, function (err, filelist) {
+            if (err) {
+                return;
+            }
+
+            if (!filelist.length) {
+                return;
+            }
+
+            for (var i = 0, len = filelist.length; i < len; i++) {
+                readContextFile(path.join(base_dir, filelist[i]));
+            }
+        });
+    }
+    
+    var watch = null;
+    var timerId = null;
+    var initBehatHint = function (featureDirectory) {
+        behatContexts = {};
+        
+        if (timerId != null) {
+            clearTimeout(timerId);
+        }
+        
+        var timer = function () {
+            readContextFile(featureDirectory);
+            timerId = setTimeout (timer, 30000);
+        };
+        timer();
+    };
+    
     return {
         'insertTab': insertTab,
         'autocomplete': autocomplete,
-        'changeMode': changeMode
+        'changeMode': changeMode,
+        'initBehatHint': initBehatHint
     };
 });
 
