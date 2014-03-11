@@ -809,7 +809,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
   CodeMirror.gherkinHint = gherkinHint;
   // deprecated
   CodeMirror.registerHelper('hint', 'gherkin', gherkinHint);
-  var WORD = /[^\x01-\x7E]|[\w$]+/, RANGE = 500;
+  var WORD = /[\S]+/, RANGE = 500;
   function gherkinHint(editor, options) {
     var word = options && options.word || WORD;
     var cur = editor.getCursor(), curLine = editor.getLine(cur.line);
@@ -822,8 +822,8 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     var list = [];
     var behatSteps = getSteps();
     for (var i = 0, len = behatSteps.length; i < len; i++) {
-      //            if (!curWord || behatSteps[i].indexOf(curWord, 0) != -1) {
-      if (!curWord || behatSteps[i].lastIndexOf(curWord, 0) == 0) {
+      if (!curWord || behatSteps[i].indexOf(curWord, 0) != -1) {
+        //             if (!curWord || behatSteps[i].lastIndexOf(curWord, 0) == 0) {
         list.push(behatSteps[i]);
       }
     }
