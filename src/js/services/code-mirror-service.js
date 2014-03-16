@@ -64,36 +64,49 @@ angular.module('winbehat').factory('codeMirrorService', function () {
         cm.setOption("mode", fxl[ext]);
     };
     
+    //=======================================
+    // behat用の補完機能
+    //=======================================
     var behatContexts = {};
-   
+    var behatWords = '# language: ja,フィーチャ,シナリオ,前提,かつ,もし,ならば'.split(',');
+    
     CodeMirror.gherkinHint = gherkinHint; // deprecated
     CodeMirror.registerHelper("hint", "gherkin", gherkinHint);
     
-    var WORD = /[\S]+/, RANGE = 500;
+    var WORD = /[\S]+/;
     function gherkinHint(editor, options) {
-        var word = options && options.word || WORD;
-        var cur = editor.getCursor(), curLine = editor.getLine(cur.line);
-        var start = cur.ch, end = start;
-        while (end < curLine.length && word.test(curLine.charAt(end)))
+        var word = options && options.word || WORD,
+            cur = editor.getCursor(), curLine = editor.getLine(cur.line),
+            start = cur.ch, 
+            end = start,
+            curWord = false,
+            list = [],
+            behatSnippets = getSnippets();
+    
+        while (end < curLine.length && word.test(curLine.charAt(end))) {
             ++end;
-        while (start && word.test(curLine.charAt(start - 1)))
+        }
+        while (start && word.test(curLine.charAt(start - 1))) {
             --start;
-        var curWord = start != end && curLine.slice(start, end);
-
-        var list = [];
-        var behatSteps = getSteps();
-
-        for (var i = 0, len = behatSteps.length; i < len ; i++) {
-            if (!curWord || behatSteps[i].indexOf(curWord, 0) != -1) {
+        }
+        
+        curWord = start != end && curLine.slice(start, end);
+        
+        if (!curWord) {
+            list = list.concat(behatWords);
+        }
+        
+        for (var i = 0, len = behatSnippets.length; i < len ; i++) {
+            if (!curWord || behatSnippets[i].indexOf(curWord, 0) != -1) {
 //             if (!curWord || behatSteps[i].lastIndexOf(curWord, 0) == 0) {
-                 list.push(behatSteps[i]);
+                 list.push(behatSnippets[i]);
              }
         }
         
-        return {list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end)};
+        return {list: list.concat(anyWordHint(editor, options)), from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end)};
     };
     
-    function getSteps() {
+    function getSnippets() {
         var steps = [];
         for (var key in behatContexts) {
             Array.prototype.push.apply(steps, behatContexts[key]);
@@ -102,6 +115,50 @@ angular.module('winbehat').factory('codeMirrorService', function () {
         return steps.sort(function (a, b) { return (a > b) ? 1 : -1; });
     }
     
+    function anyWordHint (editor, options) {
+        var word = options && options.word || /[\w$]+/,
+            range = options && options.range || 500,
+            cur = editor.getCursor(), curLine = editor.getLine(cur.line),
+            start = cur.ch,
+            end = start,
+            curWord = false,
+            list = [],
+            seen = {},
+            re = null;
+    
+        while (end < curLine.length && word.test(curLine.charAt(end))) {
+            ++end;
+        }
+        while (start && word.test(curLine.charAt(start - 1))) {
+            --start;
+        }
+        
+        curWord = start != end && curLine.slice(start, end);
+
+        re = new RegExp(word.source, "g");
+        for (var dir = -1; dir <= 1; dir += 2) {
+            var line = cur.line, endLine = Math.min(Math.max(line + dir * range, editor.firstLine()), editor.lastLine()) + dir;
+            for (; line != endLine; line += dir) {
+                var text = editor.getLine(line), m;
+                while (m = re.exec(text)) {
+                    if (line == cur.line && m[0] === curWord) {
+                        continue;
+                    }
+                    if ((!curWord || m[0].lastIndexOf(curWord, 0) == 0) && !Object.prototype.hasOwnProperty.call(seen, m[0])) {
+                        seen[m[0]] = true;
+                        list.push(m[0]);
+                    }
+                }
+            }
+        }
+        return list;
+    };
+    
+    /**
+     * ディレクトリを再帰的に読み込みcontext.phpファイルからスニペットを抽出する
+     * 
+     * @param {string} base_dir 読み込むディレクトリ
+     */
     function readContextFile (base_dir) {
         if (!fs.existsSync(base_dir)) {
             return;
@@ -134,8 +191,13 @@ angular.module('winbehat').factory('codeMirrorService', function () {
         });
     }
     
-    var watch = null;
     var timerId = null;
+    
+    /**
+     * 補完機能初期化
+     * 
+     * @param {string} featureDirectory featuresディレクトリのパス
+     */
     var initBehatHint = function (featureDirectory) {
         behatContexts = {};
         
