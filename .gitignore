@@ -2,3 +2,6 @@
 /behat/vendor/
 /node_modules/
 /nbproject
+/src/js/directives.js
+/src/js/services.js
+/src/js/controllers.js

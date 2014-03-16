@@ -8,7 +8,7 @@ angular.module('winbehat').controller('menuController', function ($scope, $rootS
     var ACTION = {
         OPEN_PROJECT: 'プロジェクトを開く',
         RUN: '実行',
-        SNIPPETS: '未定義のステップを表示'
+        SNIPPETS: '未定義のスニペットを表示'
     };
     
     $scope.menuItems = [

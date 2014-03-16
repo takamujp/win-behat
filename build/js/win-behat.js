@@ -445,7 +445,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     var ACTION = {
         OPEN_PROJECT: '\u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u3092\u958b\u304f',
         RUN: '\u5b9f\u884c',
-        SNIPPETS: '\u672a\u5b9a\u7fa9\u306e\u30b9\u30c6\u30c3\u30d7\u3092\u8868\u793a'
+        SNIPPETS: '\u672a\u5b9a\u7fa9\u306e\u30b9\u30cb\u30da\u30c3\u30c8\u3092\u8868\u793a'
       };
     $scope.menuItems = [
       {
