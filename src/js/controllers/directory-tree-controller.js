@@ -396,25 +396,6 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
         }
         
         behatService.showSnippets($scope.filelist.name, features);
-        
-//        behatService.run($scope.filelist.name, '-f snippets', features, function (err, stdout, stderr) {
-//            if (err && !stdout) {
-//                modalService.openModal('template/modal/error.html', true, {
-//                    title: 'behat実行エラー',
-//                    message: stderr || err.message
-//                });
-//                return;
-//            }
-//            
-//            if (stdout.replace(/[\n|\r]/g, '')) {
-//                _openBlankWindow('<pre>' + stdout + '</pre>');
-//            } else {
-//                modalService.openModal('template/modal/error.html', true, {
-//                    title: 'ステップ表示エラー',
-//                    message: '未定義のステップはありませんでした'
-//                });
-//            }
-//        });
     };
     
     /**
