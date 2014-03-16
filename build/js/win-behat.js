@@ -424,7 +424,8 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
   'codeMirrorService',
   'editFilelistService',
   'modalService',
-  function ($scope, codeMirrorService, editFilelistService, modalService) {
+  'behatService',
+  function ($scope, codeMirrorService, editFilelistService, modalService, behatService) {
     $scope.editFilelist = editFilelistService.list;
     $scope.editFileCount = 0;
     $scope.editFile = {};
@@ -447,6 +448,12 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         'Ctrl-Space': codeMirrorService.autocomplete,
         'Ctrl-S': function () {
           _save();
+        },
+        'Ctrl-B': function () {
+          _runBehat();
+        },
+        'Shift-Ctrl-B': function () {
+          _showSnippets();
         }
       },
       onLoad: function (cm) {
@@ -582,6 +589,24 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         $scope.$apply();
       };
       $scope.editFile.save(callback);
+    };
+    /**
+     * 編集中のファイルでbehatを実行する
+     */
+    var _runBehat = function () {
+      if (!$scope.editFile.path) {
+        return;
+      }
+      behatService.showHtmlResults($scope.editFile.path.split('features')[0], $scope.editFile.path);
+    };
+    /**
+     * 編集中のファイルのスニペットを表示する
+     */
+    var _showSnippets = function () {
+      if (!$scope.editFile.path) {
+        return;
+      }
+      behatService.showSnippets($scope.editFile.path.split('features')[0], $scope.editFile.path);
     };
   }
 ]);;angular.module('winbehat').directive('context', function () {
