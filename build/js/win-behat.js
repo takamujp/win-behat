@@ -11,7 +11,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     $scope.filelist = {};
     $scope.hasFilelist = false;
     $scope.hasFeatures = false;
-    var fs = require('fs'), PROHIBITED_CHARACTER = /[\\\/\:\*\?"<>\|]/g;
+    var fs = require('fs'), path = require('path'), PROHIBITED_CHARACTER = /[\\\/\:\*\?"<>\|]/g;
     /**
      * ディレクトリの階層情報を読み込む
      * 
@@ -24,11 +24,11 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       $scope.hasFilelist = false;
       $scope.hasFeatures = false;
       // ディレクトリ直下のファイルの一覧を取得する
-      filelistService.read(element.files[0].path, function (filelist) {
+      filelistService.read(element.files[0].path, null, function (filelist) {
         var i = 0, len = 0, hasFeatures = false, modalInstance = null;
         if (filelist) {
           for (i = 0, len = filelist.children.length; i < len; i++) {
-            if (filelist.children[i].name.split('\\').pop() == 'features') {
+            if (filelist.children[i].name == 'features') {
               hasFeatures = true;
               break;
             }
@@ -40,7 +40,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
               $scope.hasFilelist = true;
               $scope.hasFeatures = true;
             });
-            codeMirrorService.initBehatHint(filelist.name + '\\features\\bootstrap');
+            codeMirrorService.initBehatHint(path.join(filelist.path(), 'features\\bootstrap'));
           }  // 存在しない場合
           else {
             modalInstance = modalService.openModal('template/modal/confirm.html', false, {
@@ -52,7 +52,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
             });
             modalInstance.result.then(function (result) {
               if (result.selected == 'ok') {
-                behatService.init(filelist.name, function (err, stdout, stderr) {
+                behatService.init(filelist.path(), function (err, stdout, stderr) {
                   if (err) {
                     modalService.openModal('template/modal/error.html', true, {
                       title: 'behat --init \u30a8\u30e9\u30fc',
@@ -75,9 +75,15 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
      * @param {number} index
      */
     $scope.clickNode = function (element, index) {
-      var result = null;
+      var result = null, isDir = false;
       // ディレクトリなら表示を切り替える
-      if (element.item.isDirectory) {
+      try {
+        isDir = element.item.isDirectory();
+      } catch (e) {
+        element.item.parent.children.splice(index, 1);
+        return;
+      }
+      if (isDir) {
         if (element.item.isOpen) {
           element.item.isShow = !element.item.isShow;
         } else {
@@ -85,7 +91,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         }
       } else {
         // ファイルならエディタを開く
-        result = editFilelistService.push(element.item.name);
+        result = editFilelistService.push(element.item);
         if (result !== true) {
           if (typeof result == 'number') {
             $rootScope.$broadcast('selectAlreadyOpenFile', result);
@@ -104,7 +110,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
      * @param {object} directory
      */
     var _readDirectory = function (directory) {
-      filelistService.read(directory.name, function (filelist) {
+      filelistService.read(directory.path(), null, function (filelist) {
         $scope.$apply(function () {
           if (filelist) {
             directory.children = filelist.children;
@@ -122,9 +128,9 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
      */
     $scope.getIconClass = function (element) {
       return {
-        'icon-expand-directory': element.item.isDirectory && element.item.isShow,
-        'icon-contract-directory': element.item.isDirectory && !element.item.isShow,
-        'icon-file': !element.item.isDirectory,
+        'icon-expand-directory': element.item.isDirectory() && element.item.isShow,
+        'icon-contract-directory': element.item.isDirectory() && !element.item.isShow,
+        'icon-file': !element.item.isDirectory(),
         'tree-icon': true
       };
     };
@@ -142,7 +148,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       });
       modalInstance.result.then(function (result) {
         if (result.selected == 'ok') {
-          fs.unlink($scope.contextTarget.file.name, function (err) {
+          $scope.contextTarget.file.delete(function (err) {
             if (err) {
               modalService.openModal('template/modal/error.html', true, {
                 title: '\u30d5\u30a1\u30a4\u30eb\u524a\u9664\u30a8\u30e9\u30fc',
@@ -150,11 +156,10 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
               });
               return;
             }
-            var id = editFilelistService.getId($scope.contextTarget.file.name);
+            var id = editFilelistService.getId($scope.contextTarget.file.path());
             if (id >= 0) {
               $rootScope.$broadcast('deleteAlreadyOpenFile', id);
             }
-            $scope.contextTarget.parent.children.splice($scope.contextTarget.index, 1);
             $scope.$apply();
           });
         }
@@ -168,31 +173,11 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       modalInstance = modalService.openModal('template/modal/input.html', false, {
         title: '\u30d5\u30a1\u30a4\u30eb\u540d\u5909\u66f4',
         label: '\u30d5\u30a1\u30a4\u30eb\u540d',
-        inputValue: $scope.contextTarget.file.name.split('\\').pop()
+        inputValue: $scope.contextTarget.file.name
       });
       modalInstance.result.then(function (result) {
-        var oldPath = '', newPath = '';
         if (result.selected == 'ok' && result.params.inputValue) {
-          if (PROHIBITED_CHARACTER.test(result.params.inputValue)) {
-            modalService.openModal('template/modal/error.html', true, {
-              title: '\u30d5\u30a1\u30a4\u30eb\u540d\u5909\u66f4\u30a8\u30e9\u30fc',
-              message: '\u30d5\u30a1\u30a4\u30eb\u540d\u306b /:*?"<>| \u306f\u4f7f\u7528\u3067\u304d\u307e\u305b\u3093'
-            });
-            return;
-          }
-          oldPath = $scope.contextTarget.file.name;
-          newPath = $scope.contextTarget.file.name.split('\\');
-          newPath.pop();
-          newPath.push(result.params.inputValue);
-          newPath = newPath.join('\\');
-          if (fs.existsSync(newPath)) {
-            modalService.openModal('template/modal/error.html', true, {
-              title: '\u30d5\u30a1\u30a4\u30eb\u540d\u5909\u66f4\u30a8\u30e9\u30fc',
-              message: '\u3059\u3067\u306b\u5b58\u5728\u3059\u308b\u30d5\u30a1\u30a4\u30eb\u540d\u3067\u3059'
-            });
-            return;
-          }
-          fs.rename(oldPath, newPath, function (err) {
+          $scope.contextTarget.file.rename(result.params.inputValue, function (err) {
             if (err) {
               modalService.openModal('template/modal/error.html', true, {
                 title: '\u30d5\u30a1\u30a4\u30eb\u540d\u5909\u66f4\u30a8\u30e9\u30fc',
@@ -200,11 +185,6 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
               });
               return;
             }
-            var id = editFilelistService.getId(oldPath);
-            if (id >= 0) {
-              editFilelistService.rename(id, newPath);
-            }
-            $scope.contextTarget.file.name = newPath;
             $scope.$apply();
           });
         }
@@ -220,45 +200,17 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         label: '\u30d5\u30a1\u30a4\u30eb\u540d'
       });
       modalInstance.result.then(function (result) {
-        var directory = $scope.contextTarget.file, filename = directory.name;
         if (result.selected == 'ok' && result.params.inputValue) {
-          if (PROHIBITED_CHARACTER.test(result.params.inputValue)) {
-            modalService.openModal('template/modal/error.html', true, {
-              title: '\u65b0\u898f\u30d5\u30a1\u30a4\u30eb\u4f5c\u6210\u30a8\u30e9\u30fc',
-              message: '\u30d5\u30a1\u30a4\u30eb\u540d\u306b /:*?"<>| \u306f\u4f7f\u7528\u3067\u304d\u307e\u305b\u3093'
-            });
-            return;
-          }
-        }
-        filename += '\\' + result.params.inputValue;
-        fs.open(filename, 'wx', '0777', function (err, fd) {
-          if (err) {
-            modalService.openModal('template/modal/error.html', true, {
-              title: '\u65b0\u898f\u30d5\u30a1\u30a4\u30eb\u4f5c\u6210\u30a8\u30e9\u30fc',
-              message: err.code == 'EEXIST' ? '\u3059\u3067\u306b\u30d5\u30a1\u30a4\u30eb\u304c\u5b58\u5728\u3057\u307e\u3059' : err.message
-            });
-            return;
-          }
-          fs.write(fd, new Buffer(''), 0, Buffer.byteLength(''), function (err) {
-            fs.close(fd);
+          $scope.contextTarget.file.createChildFile(result.params.inputValue, '', function (err) {
             if (err) {
               modalService.openModal('template/modal/error.html', true, {
                 title: '\u65b0\u898f\u30d5\u30a1\u30a4\u30eb\u4f5c\u6210\u30a8\u30e9\u30fc',
                 message: err.message
               });
-              return;
             }
-            var file = filelistService.file(filename);
-            if (directory.isOpen) {
-              directory.children.push(file);
-              directory.children = directory.children.sort(filelistService.sortFunc);
-              directory.isShow = true;
-              $scope.$apply();
-            } else {
-              _readDirectory(directory);
-            }
+            $scope.$apply();
           });
-        });
+        }
       });
     };
     /**
@@ -271,37 +223,18 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         label: '\u30c7\u30a3\u30ec\u30af\u30c8\u30ea\u540d'
       });
       modalInstance.result.then(function (result) {
-        var directory = $scope.contextTarget.file, dirname = directory.name;
         if (result.selected == 'ok' && result.params.inputValue) {
-          if (PROHIBITED_CHARACTER.test(result.params.inputValue)) {
-            modalService.openModal('template/modal/error.html', true, {
-              title: '\u65b0\u898f\u30c7\u30a3\u30ec\u30af\u30c8\u30ea\u4f5c\u6210\u30a8\u30e9\u30fc',
-              message: '\u30c7\u30a3\u30ec\u30af\u30c8\u30ea\u540d\u306b /:*?"<>| \u306f\u4f7f\u7528\u3067\u304d\u307e\u305b\u3093'
-            });
-            return;
-          }
-        }
-        dirname += '\\' + result.params.inputValue;
-        fs.mkdir(dirname, function (err) {
-          if (err) {
-            modalService.openModal('template/modal/error.html', true, {
-              title: '\u65b0\u898f\u30c7\u30a3\u30ec\u30af\u30c8\u30ea\u4f5c\u6210\u30a8\u30e9\u30fc',
-              message: err.code == 'EEXIST' ? '\u3059\u3067\u306b\u540c\u540d\u306e\u30c7\u30a3\u30ec\u30af\u30c8\u30ea\u304c\u5b58\u5728\u3057\u307e\u3059' : err.message
-            });
-            return;
-          }
-          var newDirectory = filelistService.file(dirname);
-          newDirectory.isDirectory = true;
-          newDirectory.children = [];
-          if (directory.isOpen) {
-            directory.children.push(newDirectory);
-            directory.children = directory.children.sort(filelistService.sortFunc);
-            directory.isShow = true;
+          $scope.contextTarget.file.createChildDirectory(result.params.inputValue, function (err) {
+            if (err) {
+              modalService.openModal('template/modal/error.html', true, {
+                title: '\u65b0\u898f\u30c7\u30a3\u30ec\u30af\u30c8\u30ea\u4f5c\u6210\u30a8\u30e9\u30fc',
+                message: err.message
+              });
+              return;
+            }
             $scope.$apply();
-          } else {
-            _readDirectory(directory);
-          }
-        });
+          });
+        }
       });
     };
     /**
@@ -319,7 +252,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
      * behat実行(contextメニューから)
      */
     $scope.runBehat = function () {
-      _runBehat($scope.contextTarget.file.name);
+      _runBehat($scope.contextTarget.file.path());
     };
     /**
      * behat実行(イベントが発行されたら)
@@ -343,7 +276,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
      * 未定義のステップを表示する(contextメニューから)
      */
     $scope.showSnippets = function () {
-      _showSnippets($scope.contextTarget.file.name);
+      _showSnippets($scope.contextTarget.file.path());
     };
     /**
      * 未定義のステップを表示する(イベントが発行されたら)
@@ -354,12 +287,12 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     });
     $scope.refreshFolder = function () {
       var parent = $scope.contextTarget.parent, index = $scope.contextTarget.index, file = $scope.contextTarget.file;
-      if (!file.isDirectory || !file.isOpen) {
+      if (!file.isDirectory() || !file.isOpen) {
         return;
       }
-      filelistService.read(file.name, function (filelist) {
+      filelistService.read(file.path(), null, function (filelist) {
         if (filelist) {
-          parent.children[index] = filelist;
+          file.children = filelist.children;
         } else {
           parent.children.splice(index, 1);
         }
@@ -489,7 +422,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
      */
     $scope.select = function (index) {
       var prev = $scope.editFile, selected = editFilelistService.select(index) || { text: '' }, removeLastHistory = null;
-      if (prev.path == selected.path) {
+      if (prev.path && selected.path && prev.path() == selected.path()) {
         return;
       }
       window.dispatchEvent(new Event('changeTab'));
@@ -535,7 +468,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         // 保存直後に編集中のファイルを閉じようとすると、何故か$scope.editFile.textが空の文字列になる場合があるので、その場合はcodeMirrorの現在の値と比較するようにする
         text = $scope.editFilelist[index] == $scope.editFile ? $scope.codeMirror.getValue() : $scope.editFilelist[index].text, close = function () {
           var file = editFilelistService.remove(index);
-          if (file.path == $scope.editFile.path) {
+          if (file.file.path() == $scope.editFile.file.path()) {
             $scope.select(index - 1);
           }
         };
@@ -574,7 +507,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
      * @param {object} file
      */
     var _save = function (callback) {
-      if (!$scope.editFile.path || $scope.editFile.lastText == $scope.codeMirror.getValue()) {
+      if (!$scope.editFile.file || $scope.editFile.lastText == $scope.codeMirror.getValue()) {
         return;
       }
       $scope.editFile.text = $scope.codeMirror.getValue();
@@ -594,19 +527,19 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
      * 編集中のファイルでbehatを実行する
      */
     var _runBehat = function () {
-      if (!$scope.editFile.path) {
+      if (!$scope.editFile.file.path()) {
         return;
       }
-      behatService.showHtmlResults($scope.editFile.path.split('features')[0], $scope.editFile.path);
+      behatService.showHtmlResults($scope.editFile.file.path().split('features')[0], $scope.editFile.file.path());
     };
     /**
      * 編集中のファイルのスニペットを表示する
      */
     var _showSnippets = function () {
-      if (!$scope.editFile.path) {
+      if (!$scope.editFile.file.path()) {
         return;
       }
-      behatService.showSnippets($scope.editFile.path.split('features')[0], $scope.editFile.path);
+      behatService.showSnippets($scope.editFile.file.path().split('features')[0], $scope.editFile.file.path());
     };
   }
 ]);;angular.module('winbehat').directive('context', function () {
@@ -981,50 +914,33 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
   };
 });angular.module('winbehat').factory('editFilelistService', function () {
   var fs = require('fs'), path = require('path'), extList = require('./js/my-modules/filename-extension-list'), list = [];
-  var push = function (file_path) {
-    var text = '', i = 0, len = list.length;
+  var push = function (file) {
+    var filePath = file.path(), text = '', i = 0, len = list.length;
     for (; i < len; i++) {
-      if (list[i].path === file_path) {
+      if (list[i].file.path() === filePath) {
         return i;
         break;
       }
     }
-    if (!fs.existsSync(file_path)) {
-      return new Error(file_path + ' not found.');
+    if (!fs.existsSync(filePath)) {
+      return new Error(filePath + ' not found.');
     }
-    text = fs.readFileSync(file_path, { encoding: 'utf8' });
+    text = file.readSync();
     list.push({
-      path: file_path,
-      name: file_path.split('\\').pop(),
+      file: file,
       isSelected: false,
       text: text,
       lastText: '',
       history: null,
-      mode: extList[path.extname(file_path).split('.').pop()],
+      mode: extList[path.extname(filePath).split('.').pop()],
       save: function (callback) {
-        if (this.text == null) {
-          callback && callback(new Error('text undefined'));
-          return;
-        }
-        fs.open(this.path, 'w', '0777', function (err, fd) {
+        file.write(this.text, function (err) {
           if (err) {
             callback(err);
             return;
           }
-          // 改行なしの日本語を保存すると文字化けするので、1行以下の場合改行させる
-          var text = this.text;
-          if (text.split('\n').length <= 1) {
-            text += '\n';
-          }
-          fs.write(fd, new Buffer(text), 0, Buffer.byteLength(text), function (err) {
-            if (err) {
-              callback(err);
-              return;
-            }
-            fs.close(fd);
-            this.lastText = this.text;
-            callback();
-          }.bind(this));
+          this.lastText = this.text;
+          callback();
         }.bind(this));
       },
       isChanged: function () {
@@ -1053,10 +969,10 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     list[id].path = path;
     list[id].name = path.split('\\').pop();
   };
-  var getId = function (file_path) {
+  var getId = function (filePath) {
     var i = 0, len = 0;
     for (i = 0, len = list.length; i < len; i++) {
-      if (list[i].path == file_path) {
+      if (list[i].file.path() == filePath) {
         return i;
       }
     }

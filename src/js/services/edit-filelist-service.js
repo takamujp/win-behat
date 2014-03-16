@@ -5,59 +5,40 @@ angular.module('winbehat').factory('editFilelistService', function () {
         extList = require('./js/my-modules/filename-extension-list'),
         list = [];
     
-    var push = function (file_path) {
+    var push = function (file) {
         
-        var text = '',
+        var filePath = file.path(),
+            text = '',
             i = 0,
             len = list.length;
         
         for (; i < len; i++) {
-            if (list[i].path === file_path) {
+            if (list[i].file.path() === filePath) {
                 return i;
                 break;
             }
         }
 
-        if (!fs.existsSync(file_path)) {
-            return new Error(file_path + ' not found.');
+        if (!fs.existsSync(filePath)) {
+            return new Error(filePath + ' not found.');
         }
 
-        text = fs.readFileSync(file_path, {encoding: 'utf8'});
+        text = file.readSync();
         list.push({
-            path: file_path,
-            name: file_path.split('\\').pop(),
+            file: file,
             isSelected: false,
             text: text,
             lastText: '',
             history: null,
-            mode: extList[path.extname(file_path).split('.').pop()],
+            mode: extList[path.extname(filePath).split('.').pop()],
             save: function (callback) {
-                if (this.text == null) {
-                    callback && callback(new Error('text undefined'));
-                    return;
-                }
-
-                fs.open(this.path, 'w', '0777', function (err, fd) {
+                file.write(this.text, function (err) {
                     if (err) {
                         callback(err);
                         return;
                     }
-
-                    // 改行なしの日本語を保存すると文字化けするので、1行以下の場合改行させる
-                    var text = this.text;
-                    if (text.split("\n").length <= 1) {
-                        text += "\n";
-                    }
-
-                    fs.write(fd, new Buffer(text), 0, Buffer.byteLength(text), function (err) {
-                        if (err) {
-                            callback(err);
-                            return;
-                        }
-                        fs.close(fd);
-                        this.lastText = this.text;
-                        callback();
-                    }.bind(this));
+                    this.lastText = this.text;
+                    callback();
                 }.bind(this));
             },
             isChanged: function () {
@@ -96,12 +77,12 @@ angular.module('winbehat').factory('editFilelistService', function () {
         list[id].name = path.split('\\').pop();
     };
     
-    var getId = function (file_path) {
+    var getId = function (filePath) {
         var i = 0,
             len = 0;
     
         for (i = 0, len = list.length; i < len; i++) {
-            if (list[i].path == file_path) {
+            if (list[i].file.path() == filePath) {
                 return i;
             }
         }

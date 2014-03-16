@@ -1,34 +1,40 @@
 var fs = require('fs');
 var path = require('path');
+var file = require('./file');
 
-function File (path) {
-    return {name: path, isDirectory: false, isShow: false, isOpen: false};
-}
+//function File (path) {
+//    return {name: path, isDirectory: false, isShow: false, isOpen: false};
+//}
 
-function ReadFileList (base_dir, recursive, callback) {
+function ReadFileList (name, parent, recursive, callback) {
 
     if (!callback) {
         callback = recursive;
         recursive = null;
     }
 
-    var pathlist = File(base_dir);
-    pathlist.isOpen = !!recursive;
+    var baseFile = new file(name, parent),
+        checkPath = name;
+    baseFile.isOpen = !!recursive;
+    baseFile.isShow = !!recursive;
+    
+    if (parent) {
+        checkPath = path.join(parent.path(), name);
+    }
 
-    if (!base_dir || !fs.existsSync(base_dir)) {
+    if (!checkPath || !fs.existsSync(checkPath)) {
         callback(null);
         return;
     }
 
-    if (!fs.statSync(base_dir).isDirectory()) {
-        callback(pathlist);
+    if (!fs.statSync(checkPath).isDirectory()) {
+        callback(baseFile);
         return;
     }
 
-    pathlist.children = [];
-    pathlist.isDirectory = true;
+    baseFile.children = [];
 
-    fs.readdir(base_dir, function (err, filelist) {
+    fs.readdir(checkPath, function (err, filelist) {
         if (err) {
             callback(null);
             return;
@@ -37,84 +43,39 @@ function ReadFileList (base_dir, recursive, callback) {
         var process = filelist.length;
 
         if (!process) {
-            callback(pathlist);
+            callback(baseFile);
             return;
         }
 
         for (var i = 0, len = filelist.length; i < len; i++) {
             if (recursive) {
-                ReadFileList(path.join(base_dir, filelist[i]), true, function (child_pathlist) {
-                    if (child_pathlist) {
-                        pathlist.children.push(child_pathlist);
-                    }
-
+                ReadFileList(filelist[i], baseFile, true, function () {
                     if (!--process) {
-                        pathlist.children = pathlist.children.sort(SortFileList);
-                        callback(pathlist);
+                        baseFile.children = baseFile.children.sort(SortFileList);
+                        callback(baseFile);
                     }
                 });
             } else {
-                var child_dir = path.join(base_dir, filelist[i]);
-                pathlist.children.push({name: child_dir, isDirectory: fs.statSync(child_dir).isDirectory(), isShow: false, isOpen: false});
+                new file(filelist[i], baseFile);
             }
         }
 
         if (!recursive) {
-            pathlist.children = pathlist.children.sort(SortFileList);
-            callback(pathlist);
+            baseFile.children = baseFile.children.sort(SortFileList);
+            callback(baseFile);
         }
     });
 }
 
-function ReadFileListSync (base_dir, recursive) {
-    var pathlist = File(base_dir),
-        filelist = null,
-        child_dir = '',
-        child_pathlist = null;
-
-    pathlist.isOpen = !!recursive;
-
-    if (!base_dir || !fs.existsSync(base_dir)) {
-        return null;
-    }
-
-    if (!fs.statSync(base_dir).isDirectory()) {
-        return pathlist;
-    }
-
-    pathlist.children = [];
-    pathlist.isDirectory = true;
-    filelist = fs.readdirSync(base_dir);
-
-
-    for (var i = 0, len = filelist.length; i < len; i++) {
-        child_dir = path.join(base_dir, filelist[i]);
-        if (!!recursive) {
-            child_pathlist = ReadFileListSync(child_dir);
-            if (child_pathlist) {
-                pathlist.children.push(child_pathlist);
-            }
-        } else {
-            pathlist.children.push({name: child_dir, isDirectory: fs.statSync(child_dir).isDirectory(), isShow: false, isOpen: false});
-        }
-    }
-
-    pathlist.children = pathlist.children.sort(SortFileList);
-
-    return pathlist;
-}
-
 function SortFileList (a, b) {
-    if ((a.isDirectory && b.isDirectory) || (!a.isDirectory && !b.isDirectory)) {
+    if ((a.isDirectory() && b.isDirectory()) || (!a.isDirectory() && !b.isDirectory())) {
         return (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : -1;
     } else {
-        return (a.isDirectory < b.isDirectory) ? 1 : -1;
+        return (a.isDirectory() < b.isDirectory()) ? 1 : -1;
     }
 }
 
 module.exports = {
     read: ReadFileList,
-    readSync: ReadFileListSync,
-    file: File,
     sortFunc: SortFileList
 };

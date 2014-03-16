@@ -5,6 +5,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
     $scope.hasFeatures = false;
 
     var fs = require('fs'),
+        path = require('path'),
         PROHIBITED_CHARACTER = /[\\\/\:\*\?"<>\|]/g;
 
     /**
@@ -22,7 +23,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
         $scope.hasFeatures = false;
         
         // ディレクトリ直下のファイルの一覧を取得する
-        filelistService.read(element.files[0].path, function (filelist) {
+        filelistService.read(element.files[0].path, null, function (filelist) {
             var i = 0, 
                 len = 0,
                 hasFeatures = false,
@@ -30,7 +31,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
 
             if (filelist) {
                 for (i = 0, len = filelist.children.length; i < len; i++) {
-                    if (filelist.children[i].name.split('\\').pop() == 'features') {
+                    if (filelist.children[i].name == 'features') {
                         hasFeatures = true;
                         break;
                     }
@@ -44,7 +45,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                         $scope.hasFeatures = true;
                     });
                     
-                    codeMirrorService.initBehatHint(filelist.name + '\\features\\bootstrap');
+                    codeMirrorService.initBehatHint(path.join(filelist.path(), 'features\\bootstrap'));
                 } 
                 // 存在しない場合
                 else {
@@ -57,7 +58,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                     });
                     modalInstance.result.then(function (result) {
                         if (result.selected == 'ok') {
-                            behatService.init(filelist.name, function (err, stdout, stderr) {
+                            behatService.init(filelist.path(), function (err, stdout, stderr) {
                                 if (err) {
                                     modalService.openModal('template/modal/error.html', true, {
                                         title: 'behat --init エラー',
@@ -82,17 +83,25 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
      */
     $scope.clickNode = function (element, index) {
         
-        var result = null;
+        var result = null,
+            isDir = false;
         
         // ディレクトリなら表示を切り替える
-        if (element.item.isDirectory) {
+        try {
+            isDir = element.item.isDirectory();
+        } catch (e) {
+            element.item.parent.children.splice(index, 1);
+            return;
+        }
+        
+        if (isDir) {
             if (element.item.isOpen) {
                 element.item.isShow = !element.item.isShow;
             } else {
                 _readDirectory(element.item);
             }
         } else { // ファイルならエディタを開く
-            result = editFilelistService.push(element.item.name);
+            result = editFilelistService.push(element.item);
             
             if (result !== true) {
                 if (typeof result == 'number') {
@@ -114,7 +123,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
      * @param {object} directory
      */
     var _readDirectory = function (directory) {
-        filelistService.read(directory.name, function (filelist) {
+        filelistService.read(directory.path(), null, function (filelist) {
             $scope.$apply(function () {
                 if (filelist) {
                     directory.children = filelist.children;
@@ -133,9 +142,9 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
      */
     $scope.getIconClass = function (element) {
         return {
-            'icon-expand-directory': element.item.isDirectory && element.item.isShow,
-            'icon-contract-directory': element.item.isDirectory && !element.item.isShow,
-            'icon-file': !element.item.isDirectory,
+            'icon-expand-directory': element.item.isDirectory() && element.item.isShow,
+            'icon-contract-directory': element.item.isDirectory() && !element.item.isShow,
+            'icon-file': !element.item.isDirectory(),
             'tree-icon': true
         };
     };
@@ -156,7 +165,8 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
         });
         modalInstance.result.then(function (result) {
             if (result.selected == 'ok') {
-                fs.unlink($scope.contextTarget.file.name, function (err) {
+                
+                $scope.contextTarget.file.delete(function (err) {
                     if (err) {
                         modalService.openModal('template/modal/error.html', true, {
                             title: 'ファイル削除エラー',
@@ -165,16 +175,12 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
 
                         return;
                     }
-                    var id = editFilelistService.getId($scope.contextTarget.file.name);
+                    var id = editFilelistService.getId($scope.contextTarget.file.path());
 
                     if (id >= 0) {
                         $rootScope.$broadcast('deleteAlreadyOpenFile', id);
                     }
-
-
-                    $scope.contextTarget.parent.children.splice($scope.contextTarget.index, 1);
                     $scope.$apply();
-
                 });
             } 
         });
@@ -189,38 +195,12 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
         modalInstance = modalService.openModal('template/modal/input.html', false, {
             title: 'ファイル名変更',
             label: 'ファイル名',
-            inputValue: $scope.contextTarget.file.name.split('\\').pop()
+            inputValue: $scope.contextTarget.file.name
         });
         
-        modalInstance.result.then(function (result) {
-            var oldPath = '',
-                newPath = '';
-            
+        modalInstance.result.then(function (result) {            
             if (result.selected == 'ok' && result.params.inputValue) {
-                
-                if (PROHIBITED_CHARACTER.test(result.params.inputValue)) {
-                    modalService.openModal('template/modal/error.html', true, {
-                        title: 'ファイル名変更エラー',
-                        message: 'ファイル名に \/:*?"<>| は使用できません'
-                    });
-                    return;
-                }
-                
-                oldPath = $scope.contextTarget.file.name;
-                newPath = $scope.contextTarget.file.name.split('\\');
-                newPath.pop();
-                newPath.push(result.params.inputValue);
-                newPath = newPath.join('\\');
-                
-                if (fs.existsSync(newPath)) {
-                    modalService.openModal('template/modal/error.html', true, {
-                        title: 'ファイル名変更エラー',
-                        message: 'すでに存在するファイル名です'
-                    });
-                    return;
-                }
-                
-                fs.rename(oldPath, newPath, function (err) {
+                $scope.contextTarget.file.rename(result.params.inputValue, function (err) {
                     if (err) {
                         modalService.openModal('template/modal/error.html', true, {
                             title: 'ファイル名変更エラー',
@@ -229,15 +209,8 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                         return;
                     }
                     
-                    var id = editFilelistService.getId(oldPath);
-            
-                    if (id >= 0) {
-                        editFilelistService.rename(id, newPath);
-                    }
-                   
-                    $scope.contextTarget.file.name = newPath;
                     $scope.$apply();
-                });
+                }); 
             }
         });
     };
@@ -254,52 +227,19 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
         });
         
         modalInstance.result.then(function (result) {
-            var directory = $scope.contextTarget.file,
-                filename = directory.name;
-            
             if (result.selected == 'ok' && result.params.inputValue) {
-                if (PROHIBITED_CHARACTER.test(result.params.inputValue)) {
-                    modalService.openModal('template/modal/error.html', true, {
-                        title: '新規ファイル作成エラー',
-                        message: 'ファイル名に \/:*?"<>| は使用できません'
-                    });
-                    return;
-                }
-            }
-            
-            filename += ('\\' + result.params.inputValue);            
-            
-            fs.open(filename, 'wx', '0777', function (err, fd) {
-                if (err) {
-                    modalService.openModal('template/modal/error.html', true, {
-                        title: '新規ファイル作成エラー',
-                        message: err.code == 'EEXIST' ? 'すでにファイルが存在します' : err.message
-                    });
-                    return;
-                }
                 
-                fs.write(fd, new Buffer(''), 0, Buffer.byteLength(''), function (err) {
-                    fs.close(fd);
+                $scope.contextTarget.file.createChildFile(result.params.inputValue, '', function (err) {
                     if (err) {
                         modalService.openModal('template/modal/error.html', true, {
                             title: '新規ファイル作成エラー',
                             message: err.message
                         });
-                        return;
                     }
                     
-                    var file = filelistService.file(filename);
-                
-                    if (directory.isOpen) {
-                        directory.children.push(file);
-                        directory.children = directory.children.sort(filelistService.sortFunc);
-                        directory.isShow = true;
-                        $scope.$apply();
-                    } else {
-                        _readDirectory(directory);
-                    }
-                });
-            });
+                    $scope.$apply();
+                }); 
+            }
         });
     };
     
@@ -315,44 +255,20 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
             label: 'ディレクトリ名'
         });
         
-        modalInstance.result.then(function (result) {
-            var directory = $scope.contextTarget.file,
-                dirname = directory.name;
-            
+        modalInstance.result.then(function (result) {            
             if (result.selected == 'ok' && result.params.inputValue) {
-                if (PROHIBITED_CHARACTER.test(result.params.inputValue)) {
-                    modalService.openModal('template/modal/error.html', true, {
-                        title: '新規ディレクトリ作成エラー',
-                        message: 'ディレクトリ名に \/:*?"<>| は使用できません'
-                    });
-                    return;
-                }
-            }
-            
-            dirname += ('\\' + result.params.inputValue);            
-                
-            fs.mkdir(dirname, function (err) {
-                if (err) {
-                    modalService.openModal('template/modal/error.html', true, {
-                        title: '新規ディレクトリ作成エラー',
-                        message: err.code == 'EEXIST' ? 'すでに同名のディレクトリが存在します' : err.message
-                    });
-                    return;
-                }
-
-                var newDirectory = filelistService.file(dirname);
-                newDirectory.isDirectory = true;
-                newDirectory.children = [];
-
-                if (directory.isOpen) {
-                    directory.children.push(newDirectory);
-                    directory.children = directory.children.sort(filelistService.sortFunc);
-                    directory.isShow = true;
+                $scope.contextTarget.file.createChildDirectory(result.params.inputValue, function (err) {
+                    if (err) {
+                        modalService.openModal('template/modal/error.html', true, {
+                            title: '新規ディレクトリ作成エラー',
+                            message: err.message
+                        });
+                        return;
+                    }
+                    
                     $scope.$apply();
-                } else {
-                    _readDirectory(directory);
-                }
-            });
+                });
+            }
         });
     }; 
     
@@ -374,7 +290,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
      * behat実行(contextメニューから)
      */
     $scope.runBehat = function () {
-        _runBehat($scope.contextTarget.file.name);
+        _runBehat($scope.contextTarget.file.path());
     };
     
     /**
@@ -402,7 +318,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
      * 未定義のステップを表示する(contextメニューから)
      */
     $scope.showSnippets = function () {
-        _showSnippets($scope.contextTarget.file.name);
+        _showSnippets($scope.contextTarget.file.path());
     };
     
     /**
@@ -418,13 +334,13 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
             index = $scope.contextTarget.index,
             file = $scope.contextTarget.file;
     
-        if (!file.isDirectory || !file.isOpen) {
+        if (!file.isDirectory() || !file.isOpen) {
             return;
         }
         
-        filelistService.read(file.name, function (filelist) {
+        filelistService.read(file.path(), null, function (filelist) {
             if (filelist) {
-                parent.children[index] = filelist;
+                file.children = filelist.children;
             } else {
                 parent.children.splice(index, 1);
             }

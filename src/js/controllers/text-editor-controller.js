@@ -67,7 +67,7 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
             selected = editFilelistService.select(index) || {text: ''},
             removeLastHistory = null;
     
-        if(prev.path == selected.path) {
+        if(prev.path && selected.path && prev.path() == selected.path()) {
             return;
         }
         window.dispatchEvent(new Event('changeTab'));
@@ -123,7 +123,7 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
             close = function () {
                 var file = editFilelistService.remove(index);
 
-                if (file.path == $scope.editFile.path) {
+                if (file.file.path() == $scope.editFile.file.path()) {
                     $scope.select(index - 1);
                 }
             };
@@ -165,7 +165,7 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
      * @param {object} file
      */
     var _save = function (callback) {
-        if (!$scope.editFile.path || $scope.editFile.lastText == $scope.codeMirror.getValue()) {
+        if (!$scope.editFile.file || $scope.editFile.lastText == $scope.codeMirror.getValue()) {
             return;
         }
         $scope.editFile.text = $scope.codeMirror.getValue();
@@ -189,21 +189,21 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
      * 編集中のファイルでbehatを実行する
      */
     var _runBehat = function () {
-        if (!$scope.editFile.path) {
+        if (!$scope.editFile.file.path()) {
             return;
         }
         
-        behatService.showHtmlResults($scope.editFile.path.split('features')[0], $scope.editFile.path);
+        behatService.showHtmlResults($scope.editFile.file.path().split('features')[0], $scope.editFile.file.path());
     };
     
     /**
      * 編集中のファイルのスニペットを表示する
      */
     var _showSnippets = function () {
-        if (!$scope.editFile.path) {
+        if (!$scope.editFile.file.path()) {
             return;
         }
         
-        behatService.showSnippets($scope.editFile.path.split('features')[0], $scope.editFile.path);
+        behatService.showSnippets($scope.editFile.file.path().split('features')[0], $scope.editFile.file.path());
     };
 });
