@@ -5,8 +5,6 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
     $scope.hasFeatures = false;
 
     var fs = require('fs'),
-        gui = require('nw.gui'),
-        TMP_PATH = 'tmp/',
         PROHIBITED_CHARACTER = /[\\\/\:\*\?"<>\|]/g;
 
     /**
@@ -369,58 +367,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
             return;
         }
         
-        behatService.run($scope.filelist.name, '-f html', features, function (err, stdout, stderr) {
-            var filename = '';
-            
-            if (err) {
-                if (stdout) {
-                    if (stdout.indexOf('<!DOCTYPE html')) {
-                        _openBlankWindow('<pre>' + stdout + '</pre>');
-                        return;
-                    }
-                } else {
-                    modalService.openModal('template/modal/error.html', true, {
-                        title: 'behat実行エラー',
-                        message: stderr || err.message
-                    });
-                    return;
-                }
-            }
-            
-            filename = TMP_PATH + ($scope.filelist.name + features + '.html').replace(PROHIBITED_CHARACTER, '');
-            
-            var faildCreateFile = function () {
-                fs.unlink('build/' + filename, function (err) {});
-                _openBlankWindow(stdout);
-            };
-            
-            fs.open('build/' + filename, 'w', '0777', function (err, fd) {
-                if (err) {
-                    faildCreateFile();
-                    return;
-                }
-                
-                fs.write(fd, new Buffer(stdout), 0, Buffer.byteLength(stdout), function (err) {
-                    var win = null;
-                    
-                    fs.close(fd);
-                    if (err) {
-                        faildCreateFile();
-                        return;
-                    }
-                    
-                    win = gui.Window.get(
-                        $window.open(filename)
-                    );
-                    
-                     win.on('closed', function() {
-                         win = null;
-                         fs.unlink('build/' + filename, function (err) {});
-                     });
-                });
-            });
-            
-        });
+        behatService.showHtmlResults($scope.filelist.name, features);
     };
     
     /**
@@ -448,24 +395,26 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
             return;
         }
         
-        behatService.run($scope.filelist.name, '-f snippets', features, function (err, stdout, stderr) {
-            if (err && !stdout) {
-                modalService.openModal('template/modal/error.html', true, {
-                    title: 'behat実行エラー',
-                    message: stderr || err.message
-                });
-                return;
-            }
-            
-            if (stdout.replace(/[\n|\r]/g, '')) {
-                _openBlankWindow('<pre>' + stdout + '</pre>');
-            } else {
-                modalService.openModal('template/modal/error.html', true, {
-                    title: 'ステップ表示エラー',
-                    message: '未定義のステップはありませんでした'
-                });
-            }
-        });
+        behatService.showSnippets($scope.filelist.name, features);
+        
+//        behatService.run($scope.filelist.name, '-f snippets', features, function (err, stdout, stderr) {
+//            if (err && !stdout) {
+//                modalService.openModal('template/modal/error.html', true, {
+//                    title: 'behat実行エラー',
+//                    message: stderr || err.message
+//                });
+//                return;
+//            }
+//            
+//            if (stdout.replace(/[\n|\r]/g, '')) {
+//                _openBlankWindow('<pre>' + stdout + '</pre>');
+//            } else {
+//                modalService.openModal('template/modal/error.html', true, {
+//                    title: 'ステップ表示エラー',
+//                    message: '未定義のステップはありませんでした'
+//                });
+//            }
+//        });
     };
     
     /**
@@ -482,16 +431,6 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
         features = features || '';
         _showSnippets(features);
     });
-    
-    /**
-     * windowをblankで開く
-     * 
-     * @param {string} message 表示する内容(html5)
-     */
-    var _openBlankWindow = function (message) {
-        var win = $window.open('', '_blank');
-        $(win.document.body).html(message);  
-    };
     
     $scope.refreshFolder = function () {
         var parent = $scope.contextTarget.parent,
