@@ -236,7 +236,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                             message: err.message
                         });
                     }
-                    
+                    $scope.contextTarget.file.sortChildren();
                     $scope.$apply();
                 }); 
             }
@@ -266,6 +266,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                         return;
                     }
                     
+                    $scope.contextTarget.file.sortChildren();
                     $scope.$apply();
                 });
             }

@@ -208,6 +208,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
                 message: err.message
               });
             }
+            $scope.contextTarget.file.sortChildren();
             $scope.$apply();
           });
         }
@@ -232,6 +233,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
               });
               return;
             }
+            $scope.contextTarget.file.sortChildren();
             $scope.$apply();
           });
         }

@@ -204,4 +204,19 @@ File.prototype.createChildDirectory = function (name, callback) {
     }.bind(this));
 };
 
+/**
+ * 子要素をソートする
+ */
+File.prototype.sortChildren = function () {
+    this.children = this.children.sort(SortFileList);
+};
+
+function SortFileList (a, b) {
+    if ((a.isDirectory() && b.isDirectory()) || (!a.isDirectory() && !b.isDirectory())) {
+        return (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : -1;
+    } else {
+        return (a.isDirectory() < b.isDirectory()) ? 1 : -1;
+    }
+}
+
 module.exports = File;
