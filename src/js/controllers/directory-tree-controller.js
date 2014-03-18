@@ -3,10 +3,9 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
     $scope.filelist = {};
     $scope.hasFilelist = false;
     $scope.hasFeatures = false;
+    $scope.lastDirectory = $window.localStorage.getItem('lastDirectory') || '';
 
-    var fs = require('fs'),
-        path = require('path'),
-        PROHIBITED_CHARACTER = /[\\\/\:\*\?"<>\|]/g;
+    var path = require('path');
 
     /**
      * ディレクトリの階層情報を読み込む
@@ -45,6 +44,8 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                         $scope.hasFeatures = true;
                     });
                     
+                    $scope.lastDirectory = element.files[0].path;
+                    $window.localStorage.setItem('lastDirectory', element.files[0].path);
                     codeMirrorService.initBehatHint(path.join(filelist.path(), 'features\\bootstrap'));
                 } 
                 // 存在しない場合

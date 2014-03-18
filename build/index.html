@@ -57,7 +57,7 @@
         <div>
             <div id="directory-tree" class="custom-scrollbar" ng-controller="directoryTreeController" resize-window style="height: {{menuHeight}}px;}}">
                 <div>
-                    <input id="dir-dialog" type="file" style="display:none" nwdirectory onchange="angular.element(this).scope().openDirectory(this);" />
+                    <input id="dir-dialog" type="file" nwworkingdir="{{lastDirectory}}" style="display:none" nwdirectory onchange="angular.element(this).scope().openDirectory(this);" />
                 </div>
                 <div id="directory-tree-root" ng-if="hasFilelist">
                     <dirctory-tree-node file="filelist" context="directory-context"></dirctory-tree-node>
