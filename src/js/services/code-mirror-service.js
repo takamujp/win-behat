@@ -211,6 +211,26 @@ angular.module('winbehat').factory('codeMirrorService', function () {
         };
         timer();
     };
+    //=======================================
+    // ここまでbehat用の補完機能
+    //=======================================
+    
+
+    /**
+     * addon/dialog/dialog.js拡張
+     * blurイベントではダイアログを閉じなくする
+     */
+    var o = CodeMirror.prototype.openDialog;
+    CodeMirror.defineExtension('openDialog', function(template, callback, options) { 
+        var close = o.call(this, template, callback, options),
+            closeWrapper = function () {
+                close();
+                CodeMirror.off(angular.element('.CodeMirror-scroll').get(0), 'click', closeWrapper);
+            };
+        CodeMirror.off(angular.element('.CodeMirror-dialog input').get(0), 'blur', close);
+        CodeMirror.on(angular.element('.CodeMirror-scroll').get(0), 'click', closeWrapper);
+        return close;
+    });
     
     return {
         'insertTab': insertTab,
