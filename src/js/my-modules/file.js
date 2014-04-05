@@ -1,5 +1,6 @@
 var fs = require('fs');
 var path = require('path');
+var exec = require('child_process').exec;
 var PROHIBITED_CHARACTER =  /[\\\/\:\*\?"<>\|]/g;
 
 
@@ -30,7 +31,7 @@ File.prototype.path = function () {
  * ディレクトリかどうか判定する
  */
 File.prototype.isDirectory = function () {
-    return fs.statSync(this.path()).isDirectory();
+    return fs.existsSync(this.path()) && fs.statSync(this.path()).isDirectory();
 };
 
 /**
@@ -209,6 +210,28 @@ File.prototype.createChildDirectory = function (name, callback) {
  */
 File.prototype.sortChildren = function () {
     this.children = this.children.sort(SortFileList);
+};
+
+/**
+ * 指定したパスのファイルをコピーする
+ * 
+ * @param {string} filePath
+ * @param {function} callback(err)
+ */
+File.prototype.copyFrom = function (filePath, callback) {
+    if (!this.isDirectory()) {
+        callback(new Error('ディレクトリではありません'));
+        return;
+    }
+    
+    exec('xcopy /Y ' + filePath + ' ' + this.path(), {encoding: 'utf8', maxBuffer: 20000*1024}, function (e) {
+        if (e) {
+            callback(e);
+        }
+        
+        new File(path.basename(filePath), this);
+        callback();
+    }.bind(this));
 };
 
 function SortFileList (a, b) {

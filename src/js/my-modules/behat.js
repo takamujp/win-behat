@@ -1,6 +1,6 @@
 
 var path = require('path');
-var exec = exec = require('child_process').exec;
+var exec = require('child_process').exec;
 var BEHAT_PATH = path.resolve('.', '.\\behat\\vendor\\behat\\behat\\bin\\behat').replace(/\\/g, '\\\\');
 var EXEC_OPTIONS = {
     encoding: 'utf8',

@@ -4,6 +4,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
     $scope.hasFilelist = false;
     $scope.hasFeatures = false;
     $scope.lastDirectory = $window.localStorage.getItem('lastDirectory') || '';
+    $scope.copyTarget = null;
 
     var path = require('path');
 
@@ -274,7 +275,6 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
         });
     }; 
     
-    
     /**
      * behat実行
      * 
@@ -331,6 +331,9 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
         _showSnippets(features);
     });
     
+    /**
+     * フォルダをリフレッシュする
+     */
     $scope.refreshFolder = function () {
         var parent = $scope.contextTarget.parent,
             index = $scope.contextTarget.index,
@@ -351,4 +354,60 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
         });
     };
     
+    
+    /**
+     * ファイルをコピーする(コピーするファイルを記憶する)
+     */
+    $scope.copy = function () {
+        $scope.copyTarget = $scope.contextTarget.file;
+    }; 
+    
+    /**
+     * ファイルを貼り付ける
+     */
+    $scope.paste = function () {
+        
+        if (!$scope.copyTarget) {
+            return;
+        }
+        
+        var modalInstance = null,
+            file = $scope.contextTarget.file,
+            copyTo = path.join(file.path(), path.basename($scope.copyTarget.name)),
+            callback = null;
+
+        if (copyTo == $scope.copyTarget.path()) {
+            return;
+        }
+
+        callback = function(err) {
+            if (err) {
+                modalService.openModal('template/modal/error.html', true, {
+                    title: '貼り付けエラー',
+                    message: err.message
+                });
+                return;
+            }
+
+            $scope.refreshFolder();
+        };
+        
+        if (path.existsSync(copyTo)) {
+            modalInstance = modalService.openModal('template/modal/confirm.html', false, {
+                'yesLabel': 'はい',
+                'noLabel': 'キャンセル',
+                'hideCancel': true,
+                'title': '上書き確認',
+                'message': '同名のファイルが存在します。上書きしますか？'
+            });
+            
+            modalInstance.result.then(function (result) {
+                if (result.selected == 'ok') {
+                    file.copyFrom($scope.copyTarget.path(), callback);
+                } 
+            });
+        } else {
+            file.copyFrom($scope.copyTarget.path(), callback);
+        }
+    };
 });
