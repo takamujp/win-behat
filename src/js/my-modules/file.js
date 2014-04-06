@@ -224,13 +224,17 @@ File.prototype.copyFrom = function (filePath, callback) {
         return;
     }
     
+    var exists = fs.existsSync(path.join(this.path(), path.basename(filePath)));
+    
     exec('xcopy /Y ' + filePath + ' ' + this.path(), {encoding: 'utf8', maxBuffer: 20000*1024}, function (e) {
         if (e) {
             callback(e);
             return;
         }
         
-        new File(path.basename(filePath), this);
+        if (!exists) {
+            new File(path.basename(filePath), this);
+        }
         callback();
     }.bind(this));
 };
