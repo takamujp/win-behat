@@ -31,7 +31,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     $scope.hasFeatures = false;
     $scope.lastDirectory = $window.localStorage.getItem('lastDirectory') || '';
     $scope.copyTarget = null;
-    var path = require('path');
+    var path = require('path'), exec = require('child_process').exec;
     /**
      * ディレクトリの階層情報を読み込む
      * 
@@ -369,6 +369,12 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       } else {
         file.copyFrom($scope.copyTarget.path(), callback);
       }
+    };
+    /**
+     * エクスプローラで開く
+     */
+    $scope.explorer = function () {
+      exec('explorer ' + $scope.contextTarget.file.path());
     };
   }
 ]);angular.module('winbehat').controller('menuController', [

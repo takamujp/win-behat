@@ -6,7 +6,8 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
     $scope.lastDirectory = $window.localStorage.getItem('lastDirectory') || '';
     $scope.copyTarget = null;
 
-    var path = require('path');
+    var path = require('path'),
+        exec = require('child_process').exec;
 
     /**
      * ディレクトリの階層情報を読み込む
@@ -410,4 +411,12 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
             file.copyFrom($scope.copyTarget.path(), callback);
         }
     };
+    
+    /**
+     * エクスプローラで開く
+     */
+    $scope.explorer  = function () {
+        exec('explorer ' + $scope.contextTarget.file.path());
+    };
+    
 });
