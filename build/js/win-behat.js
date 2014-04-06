@@ -188,6 +188,33 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       });
     };
     /**
+     * ディレクトリを削除する
+     */
+    $scope.deleteDirectory = function () {
+      var modalInstance = null;
+      modalInstance = modalService.openModal('template/modal/confirm.html', false, {
+        'yesLabel': '\u306f\u3044',
+        'noLabel': '\u3044\u3044\u3048',
+        'hideCancel': true,
+        'title': '\u30c7\u30a3\u30ec\u30af\u30c8\u30ea\u524a\u9664\u78ba\u8a8d',
+        'message': '\u30c7\u30a3\u30ec\u30af\u30c8\u30ea\u3092\u524a\u9664\u3057\u307e\u3059\u304b\uff1f'
+      });
+      modalInstance.result.then(function (result) {
+        if (result.selected == 'ok') {
+          $scope.contextTarget.file.delete(function (err) {
+            if (err) {
+              modalService.openModal('template/modal/error.html', true, {
+                title: '\u30c7\u30a3\u30ec\u30af\u30c8\u30ea\u524a\u9664\u30a8\u30e9\u30fc',
+                message: err.message
+              });
+              return;
+            }
+            $scope.$apply();
+          });
+        }
+      });
+    };
+    /**
      * ファイル名を変更する
      */
     $scope.renameFile = function () {
@@ -310,9 +337,9 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       _showSnippets(features);
     });
     /**
-     * フォルダをリフレッシュする
+     * ディレクトリをリフレッシュする
      */
-    $scope.refreshFolder = function () {
+    $scope.refreshDirectory = function () {
       var parent = $scope.contextTarget.parent, index = $scope.contextTarget.index, file = $scope.contextTarget.file;
       if (!file.isDirectory() || !file.isOpen) {
         return;
@@ -351,7 +378,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
           });
           return;
         }
-        $scope.refreshFolder();
+        $scope.refreshDirectory();
       };
       if (path.existsSync(copyTo)) {
         modalInstance = modalService.openModal('template/modal/confirm.html', false, {

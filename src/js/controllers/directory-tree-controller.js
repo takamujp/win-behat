@@ -190,6 +190,37 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
     };
     
     /**
+     * ディレクトリを削除する
+     */
+    $scope.deleteDirectory = function () {
+        var modalInstance = null;
+        
+        modalInstance = modalService.openModal('template/modal/confirm.html', false, {
+            'yesLabel': 'はい',
+            'noLabel': 'いいえ',
+            'hideCancel': true,
+            'title': 'ディレクトリ削除確認',
+            'message': 'ディレクトリを削除しますか？'
+        });
+        modalInstance.result.then(function (result) {
+            if (result.selected == 'ok') {
+                
+                $scope.contextTarget.file.delete(function (err) {
+                    if (err) {
+                        modalService.openModal('template/modal/error.html', true, {
+                            title: 'ディレクトリ削除エラー',
+                            message: err.message
+                        });
+
+                        return;
+                    }
+                    $scope.$apply();
+                });
+            } 
+        });
+    };
+    
+    /**
      * ファイル名を変更する
      */
     $scope.renameFile = function () {
@@ -333,9 +364,9 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
     });
     
     /**
-     * フォルダをリフレッシュする
+     * ディレクトリをリフレッシュする
      */
-    $scope.refreshFolder = function () {
+    $scope.refreshDirectory = function () {
         var parent = $scope.contextTarget.parent,
             index = $scope.contextTarget.index,
             file = $scope.contextTarget.file;
@@ -390,7 +421,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                 return;
             }
 
-            $scope.refreshFolder();
+            $scope.refreshDirectory();
         };
         
         if (path.existsSync(copyTo)) {

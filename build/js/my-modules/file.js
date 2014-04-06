@@ -39,30 +39,33 @@ File.prototype.isDirectory = function () {
  * 
  * @param function callback(err, file)
  */
-File.prototype.delete = function (callback) {
-    if (this.isDirectory()) {
-        callback(new Error('ディレクトリは削除できません'));
-        return;
-    }
-    
+File.prototype.delete = function (callback) {    
     if (!fs.existsSync(this.path())) {
         callback(new Error('すでに削除されています'));
         return;
     }
     
-    fs.unlink(this.path(), function (err) {
+    var cb = function (err) {
         if (err) {
             callback(err);
+            return;
         }
-        
+
+        var f = null;
         for (var i = 0, len = this.parent.children.length; i < len; i++ ) {
             if (this.parent.children[i].name == this.name) {
-                callback(null, this.parent.children.splice(i, 1));
+                f = this.parent.children.splice(i, 1);
                 break;
             }
         }
-        
-    }.bind(this));
+        callback(null, f);
+    }.bind(this);
+    
+    if (this.isDirectory()) {
+        exec('rmdir /s /q ' + this.path(), {encoding: 'utf8', maxBuffer: 20000*1024}, cb);
+    } else {
+        fs.unlink(this.path(), cb);
+    }
 };
 
 /**
@@ -226,9 +229,9 @@ File.prototype.copyFrom = function (filePath, callback) {
     
     var exists = fs.existsSync(path.join(this.path(), path.basename(filePath)));
     
-    exec('xcopy /Y ' + filePath + ' ' + this.path(), {encoding: 'utf8', maxBuffer: 20000*1024}, function (e) {
-        if (e) {
-            callback(e);
+    exec('xcopy /Y ' + filePath + ' ' + this.path(), {encoding: 'utf8', maxBuffer: 20000*1024}, function (err) {
+        if (err) {
+            callback(err);
             return;
         }
         

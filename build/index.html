@@ -66,7 +66,7 @@
                 <ul id="file-context" class="dropdown-menu">
                     <li><a ng-click="renameFile()">ファイル名変更</a></li>
                     <li><a ng-click="deleteFile()">ファイル削除</a></li>
-                    <li><a ng-click="copy()">コピー</a></li>
+                    <li><a ng-click="copy()">ファイルコピー</a></li>
                     <li class="divider"></li>
                     <li><a ng-click="runBehat()">behat実行</a></li>
                     <li><a ng-click="showSnippets()">未定義のスニペットを表示</a></li>
@@ -74,8 +74,10 @@
                 <ul id="directory-context" class="dropdown-menu">
                     <li><a ng-click="createDirectory()">新規ディレクトリ作成</a></li>
                     <li><a ng-click="createFile()">新規ファイル作成</a></li>
-                    <li><a ng-click="refreshFolder()">フォルダのリフレッシュ</a></li>
-                    <li><a ng-click="paste()">貼り付け</a></li>
+                    <li><a ng-click="paste()">ファイル貼り付け</a></li>
+                    <li><a ng-click="deleteDirectory()">ディレクトリの削除</a></li>
+                    <li class="divider"></li>
+                    <li><a ng-click="refreshDirectory()">ディレクトリのリフレッシュ</a></li>
                     <li><a ng-click="explorer()">エクスプローラで開く</a></li>
                     <li class="divider"></li>
                     <li><a ng-click="runBehat()">behat実行</a></li>
