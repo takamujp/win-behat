@@ -227,6 +227,7 @@ File.prototype.copyFrom = function (filePath, callback) {
     exec('xcopy /Y ' + filePath + ' ' + this.path(), {encoding: 'utf8', maxBuffer: 20000*1024}, function (e) {
         if (e) {
             callback(e);
+            return;
         }
         
         new File(path.basename(filePath), this);
