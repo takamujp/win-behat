@@ -84,7 +84,7 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
         prev.text = $scope.codeMirror.getValue();
         
         // タブを切り替えた時にredo,undoが正常に動作するように、ファイルごとにhistoryを覚えさせる
-        if (prev.path) {
+        if (prev.file && prev.file.path()) {
             prev.history = $scope.codeMirror.getHistory();
         }
         $scope.codeMirror.clearHistory();

@@ -540,7 +540,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       // このタイミングでtextをCodeMirrorから取得しておく
       prev.text = $scope.codeMirror.getValue();
       // タブを切り替えた時にredo,undoが正常に動作するように、ファイルごとにhistoryを覚えさせる
-      if (prev.path) {
+      if (prev.file && prev.file.path()) {
         prev.history = $scope.codeMirror.getHistory();
       }
       $scope.codeMirror.clearHistory();
@@ -760,55 +760,113 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       $(win.document.body).html(message);
     };
     /**
+     * behatを実行し、その結果をファイルに保存する
+     * 
+     * @param {string} project_dir　behatを実行するディレクトリ
+     * @param {string} features 実行対象のfeatureファイルのパス・featureファイルのディレクトリのパス
+     */
+    behat.saveHtmlResults = function (project_dir, features, callback) {
+      behat.run(project_dir, '-f html', features, function (err, stdout, stderr) {
+        var filename = '';
+        if (err && !stdout) {
+          err.message = stderr || err.message;
+          callback(err);
+          return;
+        }
+        filename = TMP_PATH + (project_dir + features + '.html').replace(PROHIBITED_CHARACTER, '');
+        fs.open('build/' + filename, 'w', '0777', function (err, fd) {
+          if (err) {
+            fs.unlink('build/' + filename, function (err) {
+            });
+            callback(err);
+            return;
+          }
+          fs.write(fd, new Buffer(stdout), 0, Buffer.byteLength(stdout), function (err) {
+            fs.close(fd);
+            if (err) {
+              fs.unlink('build/' + filename, function (err) {
+              });
+              callback(err);
+              return;
+            }
+            callback(null, filename);
+          });
+        });
+      });
+    };
+    /**
      * behatを実行し、その結果を別ウィンドウに表示する
      * 
      * @param {string} project_dir　behatを実行するディレクトリ
      * @param {string} features 実行対象のfeatureファイルのパス・featureファイルのディレクトリのパス
      */
     behat.showHtmlResults = function (project_dir, features) {
-      behat.run(project_dir, '-f html', features, function (err, stdout, stderr) {
-        var filename = '';
+      behat.saveHtmlResults(project_dir, features, function (err, filepath) {
         if (err) {
-          if (stdout) {
-            if (stdout.indexOf('<!DOCTYPE html')) {
-              _openBlankWindow('<pre>' + stdout + '</pre>');
-              return;
-            }
-          } else {
-            modalService.openModal('template/modal/error.html', true, {
-              title: 'behat\u5b9f\u884c\u30a8\u30e9\u30fc',
-              message: stderr || err.message
-            });
-            return;
-          }
-        }
-        filename = TMP_PATH + (project_dir + features + '.html').replace(PROHIBITED_CHARACTER, '');
-        var faildCreateFile = function () {
-          fs.unlink('build/' + filename, function (err) {
+          modalService.openModal('template/modal/error.html', true, {
+            title: 'behat\u5b9f\u884c\u30a8\u30e9\u30fc',
+            message: err.message
           });
-          _openBlankWindow(stdout);
-        };
-        fs.open('build/' + filename, 'w', '0777', function (err, fd) {
-          if (err) {
-            faildCreateFile();
-            return;
-          }
-          fs.write(fd, new Buffer(stdout), 0, Buffer.byteLength(stdout), function (err) {
-            var win = null;
-            fs.close(fd);
-            if (err) {
-              faildCreateFile();
-              return;
-            }
-            win = gui.Window.get($window.open(filename));
-            win.on('closed', function () {
-              win = null;
-              fs.unlink('build/' + filename, function (err) {
-              });
-            });
+          return;
+        }
+        var win = gui.Window.get($window.open(filepath));
+        win.on('closed', function () {
+          win = null;
+          fs.unlink('build/' + filepath, function (err) {
           });
         });
-      });
+      });  //        behat.run(project_dir, '-f html', features, function (err, stdout, stderr) {
+           //            var filename = '';
+           //            
+           //            if (err) {
+           //                if (stdout) {
+           //                    if (stdout.indexOf('<!DOCTYPE html')) {
+           //                        _openBlankWindow('<pre>' + stdout + '</pre>');
+           //                        return;
+           //                    }
+           //                } else {
+           //                    modalService.openModal('template/modal/error.html', true, {
+           //                        title: 'behat実行エラー',
+           //                        message: stderr || err.message
+           //                    });
+           //                    return;
+           //                }
+           //            }
+           //            
+           //            filename = TMP_PATH + (project_dir + features + '.html').replace(PROHIBITED_CHARACTER, '');
+           //            
+           //            var faildCreateFile = function () {
+           //                fs.unlink('build/' + filename, function (err) {});
+           //                _openBlankWindow(stdout);
+           //            };
+           //            
+           //            fs.open('build/' + filename, 'w', '0777', function (err, fd) {
+           //                if (err) {
+           //                    faildCreateFile();
+           //                    return;
+           //                }
+           //                
+           //                fs.write(fd, new Buffer(stdout), 0, Buffer.byteLength(stdout), function (err) {
+           //                    var win = null;
+           //                    
+           //                    fs.close(fd);
+           //                    if (err) {
+           //                        faildCreateFile();
+           //                        return;
+           //                    }
+           //                    
+           //                    win = gui.Window.get(
+           //                        $window.open(filename)
+           //                    );
+           //                    
+           //                     win.on('closed', function() {
+           //                         win = null;
+           //                         fs.unlink('build/' + filename, function (err) {});
+           //                     });
+           //                });
+           //            });
+           //            
+           //        });
     };
     /**
      * 未定義のスニペットを別ウィンドウに表示する
