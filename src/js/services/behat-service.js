@@ -14,7 +14,7 @@ angular.module('winbehat').factory('behatService', function ($window, modalServi
      */
     var _openBlankWindow = function (message) {
         var win = $window.open('', '_blank');
-        $(win.document.body).html(message);  
+        $(win.document.body).html(message);
     };
     
     /**
@@ -34,7 +34,6 @@ angular.module('winbehat').factory('behatService', function ($window, modalServi
             }
             
             filename = TMP_PATH + (project_dir + features + '.html').replace(PROHIBITED_CHARACTER, '');
-            
             
             fs.open('build/' + filename, 'w', '0777', function (err, fd) {
                 if (err) {
@@ -75,66 +74,22 @@ angular.module('winbehat').factory('behatService', function ($window, modalServi
                 return;
             }
             
-            var win = gui.Window.get($window.open(filepath));
+            var query = '?params=' + encodeURIComponent(JSON.stringify({project:project_dir, features:features, filepath:filepath})),
+                win = gui.Window.get($window.open('result-window.html' + query));
 
             win.on('closed', function () {
                 win = null;
                 fs.unlink('build/' + filepath, function (err) {});
             });
+            
+            gui.Window.get().on('closed', function () {
+                if (win) {
+                    fs.unlink('build/' + filepath, function (err) {
+                        win.close();
+                    });
+                }
+            });
         });
-        
-//        behat.run(project_dir, '-f html', features, function (err, stdout, stderr) {
-//            var filename = '';
-//            
-//            if (err) {
-//                if (stdout) {
-//                    if (stdout.indexOf('<!DOCTYPE html')) {
-//                        _openBlankWindow('<pre>' + stdout + '</pre>');
-//                        return;
-//                    }
-//                } else {
-//                    modalService.openModal('template/modal/error.html', true, {
-//                        title: 'behat実行エラー',
-//                        message: stderr || err.message
-//                    });
-//                    return;
-//                }
-//            }
-//            
-//            filename = TMP_PATH + (project_dir + features + '.html').replace(PROHIBITED_CHARACTER, '');
-//            
-//            var faildCreateFile = function () {
-//                fs.unlink('build/' + filename, function (err) {});
-//                _openBlankWindow(stdout);
-//            };
-//            
-//            fs.open('build/' + filename, 'w', '0777', function (err, fd) {
-//                if (err) {
-//                    faildCreateFile();
-//                    return;
-//                }
-//                
-//                fs.write(fd, new Buffer(stdout), 0, Buffer.byteLength(stdout), function (err) {
-//                    var win = null;
-//                    
-//                    fs.close(fd);
-//                    if (err) {
-//                        faildCreateFile();
-//                        return;
-//                    }
-//                    
-//                    win = gui.Window.get(
-//                        $window.open(filename)
-//                    );
-//                    
-//                     win.on('closed', function() {
-//                         win = null;
-//                         fs.unlink('build/' + filename, function (err) {});
-//                     });
-//                });
-//            });
-//            
-//        });
     };
     
     /**

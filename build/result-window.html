@@ -1,0 +1,57 @@
+<html ng-app='behatResult' lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="js/lib/bootstrap/bootstrap.css">
+        <script src="js/lib/jquery/jquery.js"></script>
+        <script src="js/lib/codemirror/codemirror.js"></script>
+        <script src="js/lib/angular/angular.js"></script>
+        <script src="js/lib/angular-route/angular-route.js"></script>
+        <script src="js/lib/angular-ui-codemirror/ui-codemirror.js"></script>
+        <script src="js/lib/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+        <!--<script src="js/win-behat.js"></script>-->
+        <title>behatResult</title>
+    </head>
+    <body style='overflow-y: hidden'>
+        <div id="result-area" ng-controller="resultWindowController">
+            <div style="position: absolute; width: 100%; height: 100px;">
+                <a class="btn btn-success btn-small" ng-click="retry()">retry</a>
+            </div>
+            <div style="position: absolute; top:34px; width: 100%; height: 94%;">
+                <iframe ng-src="{{resultPath}}" style="height: 100%; width: 100%;">
+                </iframe>
+            </div>
+        </div>
+    </body>
+    
+    <script>
+        // winbehatモジュールを読み込むと何故か2回目以降にリザルトウィンドウを表示しようとするとクラッシュするので、
+        // modalService,behatServiceはwinbehatモジュールから読み込まずに定義しておく
+        var app = angular.module('behatResult', ['ui.bootstrap']);
+        app.factory('modalService',function($modal){var openModal=function(template,backdrop,params){return $modal.open({templateUrl:template,controller:function($scope,$modalInstance,params){$scope.params=params||{};$scope.init&&$scope.init($scope);$scope.ok=params.ok||function(){$modalInstance.close(params)};$scope.yes=params.yes||function(){$modalInstance.close({selected:'ok',params:params})};$scope.no=params.no||function(){$modalInstance.close({selected:'no',params:params})};$scope.cancel=params.cancel||function(){$modalInstance.dismiss('cancel')}},backdrop:backdrop||false,resolve:{params:function(){return params}}})};return{openModal:openModal}});
+        app.factory('behatService',function(){var fs=require('fs'),behat=require('./js/my-modules/behat'),TMP_PATH='tmp/',PROHIBITED_CHARACTER=/[\\\/\:\*\?"<>\|]/g;behat.saveHtmlResults=function(project_dir,features,callback){behat.run(project_dir,'-f html',features,function(err,stdout,stderr){var filename='';if(err&&!stdout){err.message=stderr||err.message;callback(err);return}filename=TMP_PATH+(project_dir+features+'.html').replace(PROHIBITED_CHARACTER,'');fs.open('build/'+filename,'w','0777',function(err,fd){if(err){fs.unlink('build/'+filename,function(err){});callback(err);return}fs.write(fd,new Buffer(stdout),0,Buffer.byteLength(stdout),function(err){fs.close(fd);if(err){fs.unlink('build/'+filename,function(err){});callback(err);return}callback(null,filename)})})})};return behat});
+        
+        app.controller('resultWindowController', function ($scope, modalService, behatService) {
+            var json = decodeURIComponent(location.search.replace(/^\?params=/, '')),
+                params = JSON.parse(json),
+                project = params.project,
+                features = params.features,
+                filepath = params.filepath;
+                
+            $scope.resultPath = filepath;
+            
+            $scope.retry = function () {
+                behatService.saveHtmlResults(project, features, function (err, filepath) {
+                    if (err) {
+                        modalService.openModal('template/modal/error.html', true, {
+                            title: 'behat実行エラー',
+                            message: err.message
+                        });
+                        return;
+                    }
+                    
+                    location.reload();
+                });
+            };
+        });
+    </script>
+</html>
