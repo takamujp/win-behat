@@ -23,7 +23,14 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
             'Ctrl-Space': codeMirrorService.autocomplete,
             'Ctrl-S': function () {_save();},
             'Ctrl-B': function () {_runBehat();},
-            'Shift-Ctrl-B': function () {_showSnippets();}
+            'Shift-Ctrl-B': function () {_showSnippets();},
+            'Ctrl-W': function () {
+                if ($scope.editFile.file) {
+                    $scope.close(editFilelistService.getId($scope.editFile.file.path()));
+                    $scope.$apply();
+                }
+            },
+            'Shift-Ctrl-W': function () {$scope.closeAll();}
         },
         onLoad: function (cm) {
             $scope.codeMirror = cm;
@@ -134,7 +141,7 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
                 'noLabel': '保存せずに閉じる',
                 'cancelLabel': 'キャンセル',
                 'title': '保存の確認',
-                'message': 'ファイルは変更されています。保存しますか？'
+                'message': $scope.editFilelist[index].file.name + 'は変更されています。保存しますか？'
             });
             modalInstance.result.then(function (result) {
                 if (result.selected == 'ok') {
@@ -156,6 +163,28 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
             });
         } else {
             close();
+        }
+    };
+    
+    /**
+     * すべてのファイルを閉じる
+     */
+    $scope.closeAll = function () {
+        var pathList = [],
+            i = 0,
+            id = 0,
+            len = $scope.editFilelist.length;
+    
+        for (; i < len; i++) {
+            pathList.push($scope.editFilelist[i].file.path());
+        }
+        
+        for (i = 0; i < len; i++) {
+            id = editFilelistService.getId(pathList[i]);
+            if (id >= 0) {
+                $scope.close(id);
+                $scope.$apply();
+            }
         }
     };
     

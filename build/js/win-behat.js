@@ -491,6 +491,15 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         },
         'Shift-Ctrl-B': function () {
           _showSnippets();
+        },
+        'Ctrl-W': function () {
+          if ($scope.editFile.file) {
+            $scope.close(editFilelistService.getId($scope.editFile.file.path()));
+            $scope.$apply();
+          }
+        },
+        'Shift-Ctrl-W': function () {
+          $scope.closeAll();
         }
       },
       onLoad: function (cm) {
@@ -582,7 +591,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
           'noLabel': '\u4fdd\u5b58\u305b\u305a\u306b\u9589\u3058\u308b',
           'cancelLabel': '\u30ad\u30e3\u30f3\u30bb\u30eb',
           'title': '\u4fdd\u5b58\u306e\u78ba\u8a8d',
-          'message': '\u30d5\u30a1\u30a4\u30eb\u306f\u5909\u66f4\u3055\u308c\u3066\u3044\u307e\u3059\u3002\u4fdd\u5b58\u3057\u307e\u3059\u304b\uff1f'
+          'message': $scope.editFilelist[index].file.name + '\u306f\u5909\u66f4\u3055\u308c\u3066\u3044\u307e\u3059\u3002\u4fdd\u5b58\u3057\u307e\u3059\u304b\uff1f'
         });
         modalInstance.result.then(function (result) {
           if (result.selected == 'ok') {
@@ -603,6 +612,22 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         });
       } else {
         close();
+      }
+    };
+    /**
+     * すべてのファイルを閉じる
+     */
+    $scope.closeAll = function () {
+      var pathList = [], i = 0, id = 0, len = $scope.editFilelist.length;
+      for (; i < len; i++) {
+        pathList.push($scope.editFilelist[i].file.path());
+      }
+      for (i = 0; i < len; i++) {
+        id = editFilelistService.getId(pathList[i]);
+        if (id >= 0) {
+          $scope.close(id);
+          $scope.$apply();
+        }
       }
     };
     /**
