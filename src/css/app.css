@@ -135,6 +135,9 @@ input {
     color: black;
 }
 
+.highlight {
+    background-color: gray !important;
+}
 
 /*スクロールバー*/
 .custom-scrollbar::-webkit-scrollbar, .CodeMirror-vscrollbar::-webkit-scrollbar, .CodeMirror-hscrollbar::-webkit-scrollbar

@@ -1,6 +1,6 @@
 
 
-angular.module('winbehat').controller('textEditorController', function ($scope, codeMirrorService, editFilelistService, modalService, behatService) {
+angular.module('winbehat').controller('textEditorController', function ($scope, codeMirrorService, editFilelistService, modalService, behatService, highlighService) {
     $scope.editFilelist = editFilelistService.list;
     $scope.editFileCount = 0;
     $scope.editFile = {};
@@ -34,6 +34,10 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
         },
         onLoad: function (cm) {
             $scope.codeMirror = cm;
+            
+            cm.on('focus', function () {
+                $scope.editFile.file.path && $scope.editFile.file.path() && highlighService.highlight($scope.editFile.file.path());
+            });
         }
     };
     
@@ -77,6 +81,10 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
         if(prev.path && selected.path && prev.path() == selected.path()) {
             return;
         }
+        
+        // ハイライト
+        highlighService.highlight(selected.file.path());
+        
         window.dispatchEvent(new Event('changeTab'));
         $scope.editFile = selected;
         

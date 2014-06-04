@@ -25,7 +25,8 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
   'modalService',
   'behatService',
   'codeMirrorService',
-  function ($scope, $rootScope, $window, filelistService, editFilelistService, modalService, behatService, codeMirrorService) {
+  'highlighService',
+  function ($scope, $rootScope, $window, filelistService, editFilelistService, modalService, behatService, codeMirrorService, highlighService) {
     $scope.filelist = {};
     $scope.hasFilelist = false;
     $scope.hasFeatures = false;
@@ -98,6 +99,8 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
      */
     $scope.clickNode = function (element, index) {
       var result = null, isDir = false;
+      // ハイライト
+      highlighService.highlight(element.item.path());
       // ディレクトリなら表示を切り替える
       try {
         isDir = element.item.isDirectory();
@@ -462,7 +465,8 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
   'editFilelistService',
   'modalService',
   'behatService',
-  function ($scope, codeMirrorService, editFilelistService, modalService, behatService) {
+  'highlighService',
+  function ($scope, codeMirrorService, editFilelistService, modalService, behatService, highlighService) {
     $scope.editFilelist = editFilelistService.list;
     $scope.editFileCount = 0;
     $scope.editFile = {};
@@ -504,6 +508,9 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       },
       onLoad: function (cm) {
         $scope.codeMirror = cm;
+        cm.on('focus', function () {
+          $scope.editFile.file.path && $scope.editFile.file.path() && highlighService.highlight($scope.editFile.file.path());
+        });
       }
     };
     /**
@@ -538,6 +545,8 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       if (prev.path && selected.path && prev.path() == selected.path()) {
         return;
       }
+      // ハイライト
+      highlighService.highlight(selected.file.path());
       window.dispatchEvent(new Event('changeTab'));
       $scope.editFile = selected;
       // modeによってCodeMirrorのオプションを切り替える
@@ -671,55 +680,60 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       behatService.showSnippets($scope.editFile.file.path().split('features')[0], $scope.editFile.file.path());
     };
   }
-]);;angular.module('winbehat').directive('context', function () {
-  var contexts = [];
-  var hide = function () {
-    for (var key in contexts) {
-      contexts[key].css({ 'display': 'none' });
-    }
-  };
-  return {
-    restrict: 'A',
-    scope: '@&',
-    compile: function compile(tElement, tAttrs, transclude) {
-      return {
-        post: function postLink(scope, iElement, iAttrs, controller) {
-          var ul = $('#' + iAttrs.context), last = null;
-          ul.css({ 'display': 'none' });
-          contexts[iAttrs.context] = ul;
-          $(iElement).on('contextmenu', function (event) {
-            hide();
-            if (!scope.file) {
-              return;
-            }
-            angular.element($('#directory-tree')).scope().contextTarget = {
-              parent: scope.file,
-              index: scope.$index,
-              file: scope.file.children[scope.$index]
-            };
-            ul.css({
-              position: 'fixed',
-              display: 'block',
-              left: event.clientX + 'px',
-              top: event.clientY + 'px'
-            });
-            last = event.timeStamp;
-            event.stopPropagation();
-          });
-          $(document).on('click contextmenu', function (event) {
-            var target = $(event.target);
-            if (!target.is('.popover') && !target.parents().is('.popover')) {
-              if (last === event.timeStamp) {
+]);;angular.module('winbehat').directive('context', [
+  'highlighService',
+  function (highlighService) {
+    var contexts = [];
+    var hide = function () {
+      for (var key in contexts) {
+        contexts[key].css({ 'display': 'none' });
+      }
+    };
+    return {
+      restrict: 'A',
+      scope: '@&',
+      compile: function compile(tElement, tAttrs, transclude) {
+        return {
+          post: function postLink(scope, iElement, iAttrs, controller) {
+            var ul = $('#' + iAttrs.context), last = null;
+            ul.css({ 'display': 'none' });
+            contexts[iAttrs.context] = ul;
+            $(iElement).on('contextmenu', function (event) {
+              // ハイライト
+              highlighService.highlight(scope.item.path());
+              hide();
+              if (!scope.file) {
                 return;
               }
-              ul.css({ 'display': 'none' });
-            }
-          });
-        }
-      };
-    }
-  };
-});angular.module('winbehat').directive('dirctoryTreeNode', [
+              angular.element($('#directory-tree')).scope().contextTarget = {
+                parent: scope.file,
+                index: scope.$index,
+                file: scope.file.children[scope.$index]
+              };
+              ul.css({
+                position: 'fixed',
+                display: 'block',
+                left: event.clientX + 'px',
+                top: event.clientY + 'px'
+              });
+              last = event.timeStamp;
+              event.stopPropagation();
+            });
+            $(document).on('click contextmenu', function (event) {
+              var target = $(event.target);
+              if (!target.is('.popover') && !target.parents().is('.popover')) {
+                if (last === event.timeStamp) {
+                  return;
+                }
+                ul.css({ 'display': 'none' });
+              }
+            });
+          }
+        };
+      }
+    };
+  }
+]);angular.module('winbehat').directive('dirctoryTreeNode', [
   '$compile',
   function ($compile) {
     return {
@@ -1163,6 +1177,13 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
   };
 });angular.module('winbehat').factory('filelistService', function () {
   return require('./js/my-modules/filelist');
+});angular.module('winbehat').factory('highlighService', function () {
+  return {
+    highlight: function (path) {
+      $('.highlight').removeClass('highlight');
+      $('pre[path="' + path.replace(/\\/g, '\\\\') + '"]').addClass('highlight');
+    }
+  };
 });angular.module('winbehat').factory('modalService', [
   '$modal',
   function ($modal) {

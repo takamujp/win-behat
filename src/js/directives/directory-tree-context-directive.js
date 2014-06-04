@@ -1,4 +1,4 @@
-angular.module('winbehat').directive("context", function () {
+angular.module('winbehat').directive("context", function (highlighService) {
     var contexts = [];
             
     var hide = function () {
@@ -21,6 +21,10 @@ angular.module('winbehat').directive("context", function () {
                     ul.css({'display': 'none'});
                     contexts[iAttrs.context] = ul;
                     $(iElement).on('contextmenu', function (event) {
+                        
+                        // ハイライト
+                        highlighService.highlight(scope.item.path());
+                        
                         hide();
                         if (!scope.file) {
                             return;

@@ -1,5 +1,5 @@
 
-angular.module('winbehat').controller('directoryTreeController', function ($scope, $rootScope, $window, filelistService, editFilelistService, modalService, behatService, codeMirrorService) {
+angular.module('winbehat').controller('directoryTreeController', function ($scope, $rootScope, $window, filelistService, editFilelistService, modalService, behatService, codeMirrorService, highlighService) {
     $scope.filelist = {};
     $scope.hasFilelist = false;
     $scope.hasFeatures = false;
@@ -88,6 +88,9 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
         
         var result = null,
             isDir = false;
+        
+        // ハイライト
+        highlighService.highlight(element.item.path());
         
         // ディレクトリなら表示を切り替える
         try {

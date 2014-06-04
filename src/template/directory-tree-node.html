@@ -1,7 +1,7 @@
 <ul>
     <li ng-repeat="item in file.children">
         <div ng-click="clickNode(this, $index)" context="{{item.isDirectory() ? 'directory-context' : 'file-context'}}">
-            <span ng-class="getIconClass(this)"></span><pre>{{item.name}}</pre>
+            <span ng-class="getIconClass(this)"></span><pre path="{{item.path()}}">{{item.name}}</pre>
         </div>
         <span ng-show="item.isDirectory() && item.isShow">
             <dirctory-tree-node file="item"></dirctory-tree-node>
