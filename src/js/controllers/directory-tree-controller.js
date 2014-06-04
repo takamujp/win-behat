@@ -238,7 +238,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                     if (err) {
                         modalService.openModal('template/modal/error.html', true, {
                             title: 'ファイル名変更エラー',
-                            message: err.message
+                            message: typeof err == 'string' ? err : err.message
                         });
                         return;
                     }

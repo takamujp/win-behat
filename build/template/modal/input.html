@@ -2,7 +2,7 @@
     <h4>{{params.title}}</h4>
 </div>
 <div class="modal-body">
-    <span>{{params.label}}</span><input type="text" ng-model="params.inputValue">
+    <span>{{params.label}}</span><input type="text" ng-model="params.inputValue" press-enter="yes()">
 </div>
 <div class="modal-footer">
     <button ng-hide="params.hideOk" class="btn btn-primary" ng-click="yes()">{{params.yesLabel || 'ok'}}</button>

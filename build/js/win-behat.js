@@ -230,7 +230,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
             if (err) {
               modalService.openModal('template/modal/error.html', true, {
                 title: '\u30d5\u30a1\u30a4\u30eb\u540d\u5909\u66f4\u30a8\u30e9\u30fc',
-                message: err.message
+                message: typeof err == 'string' ? err : err.message
               });
               return;
             }
@@ -742,7 +742,18 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       }
     };
   }
-]);angular.module('winbehat').directive('resizeWindow', [
+]);angular.module('winbehat').directive('pressEnter', function () {
+  return function (scope, element, attrs) {
+    element.bind('keydown keypress', function (event) {
+      if (event.which === 13) {
+        scope.$apply(function () {
+          scope.$eval(attrs.pressEnter, { 'event': event });
+        });
+        event.preventDefault();
+      }
+    });
+  };
+});angular.module('winbehat').directive('resizeWindow', [
   '$window',
   function ($window) {
     return function ($scope) {
