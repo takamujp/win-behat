@@ -8,6 +8,7 @@ angular.module('winbehat').controller('menuController', function ($scope, $rootS
     var ACTION = {
         OPEN_PROJECT: 'プロジェクトを開く',
         RUN: '実行',
+        STOP_ON_FAILURE: 'behat実行(エラー時中止)',
         SNIPPETS: '未定義のスニペットを表示'
     };
     
@@ -22,6 +23,7 @@ angular.module('winbehat').controller('menuController', function ($scope, $rootS
             label: CATEGORY.BEHAT,
             items: [
                 {label: ACTION.RUN},
+                {label: ACTION.STOP_ON_FAILURE},
                 {label: ACTION.SNIPPETS}
             ]
         }
@@ -50,6 +52,11 @@ angular.module('winbehat').controller('menuController', function ($scope, $rootS
                 case ACTION.SNIPPETS:
                     $rootScope.$broadcast('showSnippets');
                     break;
+                    
+                case ACTION.STOP_ON_FAILURE:
+                    $rootScope.$broadcast('runBehat', {features: '', options:['--stop-on-failure']});
+                    break;
+                    
                 default:
                     break;
             }

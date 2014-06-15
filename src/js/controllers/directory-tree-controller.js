@@ -315,27 +315,28 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
      * 
      * @param {string} features 実行対象のfeatureファイル・ディレクトリのパス
      */
-    var _runBehat = function (features) {
+    var _runBehat = function (features, options) {
         if (!$scope.hasFeatures) {
             return;
         }
         
-        behatService.showHtmlResults($scope.filelist.name, features);
+        behatService.showHtmlResults($scope.filelist.name, features, options);
     };
     
     /**
      * behat実行(contextメニューから)
      */
-    $scope.runBehat = function () {
-        _runBehat($scope.contextTarget.file.path());
+    $scope.runBehat = function (options) {
+        _runBehat($scope.contextTarget.file.path(), options);
     };
     
     /**
      * behat実行(イベントが発行されたら)
      */
-    $scope.$on('runBehat', function(event, features) {
-        features = features || '';
-        _runBehat(features);
+    $scope.$on('runBehat', function(event, params) {
+        var features = (params && params.features) || '',
+            options = (params && params.options) || '';
+        _runBehat(features, options);
     });
     
     /**

@@ -69,6 +69,7 @@
                     <li><a ng-click="copy()">ファイルコピー</a></li>
                     <li class="divider"></li>
                     <li><a ng-click="runBehat()">behat実行</a></li>
+                    <li><a ng-click="runBehat(['--stop-on-failure'])">behat実行(エラー時中止)</a></li>
                     <li><a ng-click="showSnippets()">未定義のスニペットを表示</a></li>
                 </ul>
                 <ul id="directory-context" class="dropdown-menu">
@@ -81,6 +82,7 @@
                     <li><a ng-click="explorer()">エクスプローラで開く</a></li>
                     <li class="divider"></li>
                     <li><a ng-click="runBehat()">behat実行</a></li>
+                    <li><a ng-click="runBehat(['--stop-on-failure'])">behat実行(エラー時中止)</a></li>
                     <li><a ng-click="showSnippets()">未定義のスニペットを表示</a></li>
                 </ul>
             </div>

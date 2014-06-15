@@ -296,24 +296,24 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
      * 
      * @param {string} features 実行対象のfeatureファイル・ディレクトリのパス
      */
-    var _runBehat = function (features) {
+    var _runBehat = function (features, options) {
       if (!$scope.hasFeatures) {
         return;
       }
-      behatService.showHtmlResults($scope.filelist.name, features);
+      behatService.showHtmlResults($scope.filelist.name, features, options);
     };
     /**
      * behat実行(contextメニューから)
      */
-    $scope.runBehat = function () {
-      _runBehat($scope.contextTarget.file.path());
+    $scope.runBehat = function (options) {
+      _runBehat($scope.contextTarget.file.path(), options);
     };
     /**
      * behat実行(イベントが発行されたら)
      */
-    $scope.$on('runBehat', function (event, features) {
-      features = features || '';
-      _runBehat(features);
+    $scope.$on('runBehat', function (event, params) {
+      var features = params && params.features || '', options = params && params.options || '';
+      _runBehat(features, options);
     });
     /**
      * behatを実行して、未定義のステップを表示する
@@ -418,6 +418,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     var ACTION = {
         OPEN_PROJECT: '\u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u3092\u958b\u304f',
         RUN: '\u5b9f\u884c',
+        STOP_ON_FAILURE: 'behat\u5b9f\u884c(\u30a8\u30e9\u30fc\u6642\u4e2d\u6b62)',
         SNIPPETS: '\u672a\u5b9a\u7fa9\u306e\u30b9\u30cb\u30da\u30c3\u30c8\u3092\u8868\u793a'
       };
     $scope.menuItems = [
@@ -429,6 +430,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         label: CATEGORY.BEHAT,
         items: [
           { label: ACTION.RUN },
+          { label: ACTION.STOP_ON_FAILURE },
           { label: ACTION.SNIPPETS }
         ]
       }
@@ -453,6 +455,12 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         case ACTION.SNIPPETS:
           $rootScope.$broadcast('showSnippets');
           break;
+        case ACTION.STOP_ON_FAILURE:
+          $rootScope.$broadcast('runBehat', {
+            features: '',
+            options: ['--stop-on-failure']
+          });
+          break;
         default:
           break;
         }
@@ -461,12 +469,13 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
   }
 ]);angular.module('winbehat').controller('textEditorController', [
   '$scope',
+  '$window',
   'codeMirrorService',
   'editFilelistService',
   'modalService',
   'behatService',
   'highlighService',
-  function ($scope, codeMirrorService, editFilelistService, modalService, behatService, highlighService) {
+  function ($scope, $window, codeMirrorService, editFilelistService, modalService, behatService, highlighService) {
     $scope.editFilelist = editFilelistService.list;
     $scope.editFileCount = 0;
     $scope.editFile = {};
@@ -492,6 +501,9 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         },
         'Ctrl-B': function () {
           _runBehat();
+        },
+        'Alt-B': function () {
+          _runBehat(['--stop-on-failure']);
         },
         'Shift-Ctrl-B': function () {
           _showSnippets();
@@ -664,11 +676,11 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     /**
      * 編集中のファイルでbehatを実行する
      */
-    var _runBehat = function () {
+    var _runBehat = function (options) {
       if (!$scope.editFile.file.path()) {
         return;
       }
-      behatService.showHtmlResults($scope.editFile.file.path().split('features')[0], $scope.editFile.file.path());
+      behatService.showHtmlResults($scope.editFile.file.path().split('features')[0], $scope.editFile.file.path(), options);
     };
     /**
      * 編集中のファイルのスニペットを表示する
@@ -814,9 +826,16 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
      * 
      * @param {string} project_dir　behatを実行するディレクトリ
      * @param {string} features 実行対象のfeatureファイルのパス・featureファイルのディレクトリのパス
+     * @param {Array} options behatコマンドのオプション
+     * @param {Function} callback コールバック
      */
-    behat.saveHtmlResults = function (project_dir, features, callback) {
-      behat.run(project_dir, '-f html', features, function (err, stdout, stderr) {
+    behat.saveHtmlResults = function (project_dir, features, options, callback) {
+      if (options instanceof Array) {
+        options.push('-f html');
+      } else {
+        options = '-f html';
+      }
+      behat.run(project_dir, options, features, function (err, stdout, stderr) {
         var filename = '';
         if (err && !stdout) {
           err.message = stderr || err.message;
@@ -849,9 +868,10 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
      * 
      * @param {string} project_dir　behatを実行するディレクトリ
      * @param {string} features 実行対象のfeatureファイルのパス・featureファイルのディレクトリのパス
+     * @param {Array} options behatコマンドのオプション
      */
-    behat.showHtmlResults = function (project_dir, features) {
-      behat.saveHtmlResults(project_dir, features, function (err, filepath) {
+    behat.showHtmlResults = function (project_dir, features, options) {
+      behat.saveHtmlResults(project_dir, features, options, function (err, filepath) {
         if (err) {
           modalService.openModal('template/modal/error.html', true, {
             title: 'behat\u5b9f\u884c\u30a8\u30e9\u30fc',
@@ -862,7 +882,8 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         var query = '?params=' + encodeURIComponent(JSON.stringify({
             project: project_dir,
             features: features,
-            filepath: filepath
+            filepath: filepath,
+            options: options
           })), win = gui.Window.get($window.open('result-window.html' + query));
         win.on('closed', function () {
           win = null;

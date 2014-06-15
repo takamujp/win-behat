@@ -22,9 +22,18 @@ angular.module('winbehat').factory('behatService', function ($window, modalServi
      * 
      * @param {string} project_dir　behatを実行するディレクトリ
      * @param {string} features 実行対象のfeatureファイルのパス・featureファイルのディレクトリのパス
+     * @param {Array} options behatコマンドのオプション
+     * @param {Function} callback コールバック
      */
-    behat.saveHtmlResults = function (project_dir, features, callback) {
-        behat.run(project_dir, '-f html', features, function (err, stdout, stderr) {
+    behat.saveHtmlResults = function (project_dir, features, options, callback) {
+        
+        if (options instanceof  Array) {
+            options.push('-f html');
+        } else {
+            options = '-f html';
+        }
+        
+        behat.run(project_dir, options, features, function (err, stdout, stderr) {
             var filename = '';
             
             if (err && !stdout) {
@@ -63,9 +72,10 @@ angular.module('winbehat').factory('behatService', function ($window, modalServi
      * 
      * @param {string} project_dir　behatを実行するディレクトリ
      * @param {string} features 実行対象のfeatureファイルのパス・featureファイルのディレクトリのパス
+     * @param {Array} options behatコマンドのオプション
      */
-    behat.showHtmlResults = function (project_dir, features) {
-        behat.saveHtmlResults(project_dir, features, function (err, filepath) {
+    behat.showHtmlResults = function (project_dir, features, options) {
+        behat.saveHtmlResults(project_dir, features, options, function (err, filepath) {
             if (err) {
                 modalService.openModal('template/modal/error.html', true, {
                     title: 'behat実行エラー',
@@ -74,7 +84,7 @@ angular.module('winbehat').factory('behatService', function ($window, modalServi
                 return;
             }
             
-            var query = '?params=' + encodeURIComponent(JSON.stringify({project:project_dir, features:features, filepath:filepath})),
+            var query = '?params=' + encodeURIComponent(JSON.stringify({project:project_dir, features:features, filepath:filepath, options: options})),
                 win = gui.Window.get($window.open('result-window.html' + query));
 
             win.on('closed', function () {

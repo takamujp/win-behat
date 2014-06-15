@@ -1,6 +1,6 @@
 
 
-angular.module('winbehat').controller('textEditorController', function ($scope, codeMirrorService, editFilelistService, modalService, behatService, highlighService) {
+angular.module('winbehat').controller('textEditorController', function ($scope, $window, codeMirrorService, editFilelistService, modalService, behatService, highlighService) {
     $scope.editFilelist = editFilelistService.list;
     $scope.editFileCount = 0;
     $scope.editFile = {};
@@ -23,6 +23,7 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
             'Ctrl-Space': codeMirrorService.autocomplete,
             'Ctrl-S': function () {_save();},
             'Ctrl-B': function () {_runBehat();},
+            'Alt-B': function () {_runBehat(['--stop-on-failure']);},
             'Shift-Ctrl-B': function () {_showSnippets();},
             'Ctrl-W': function () {
                 if ($scope.editFile.file) {
@@ -225,12 +226,12 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
     /**
      * 編集中のファイルでbehatを実行する
      */
-    var _runBehat = function () {
+    var _runBehat = function (options) {
         if (!$scope.editFile.file.path()) {
             return;
         }
         
-        behatService.showHtmlResults($scope.editFile.file.path().split('features')[0], $scope.editFile.file.path());
+        behatService.showHtmlResults($scope.editFile.file.path().split('features')[0], $scope.editFile.file.path(), options);
     };
     
     /**

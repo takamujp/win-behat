@@ -29,7 +29,7 @@ function RunBehat(project_dir, options, features, callback) {
             }
             
             (RunBehat = function RunBehat(project_dir, options, features, callback) {
-                if (options instanceof Array) {
+                if (options.join) {
                     options = options.join(' ');
                 } else if (typeof options == 'object') {
                     var tmp = '';
