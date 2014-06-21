@@ -6,6 +6,7 @@
         <link rel="stylesheet" type="text/css" href="js/lib/codemirror/theme/mbo.css">
         <link rel="stylesheet" type="text/css" href="js/lib/codemirror/addon/dialog/dialog.css">
         <link rel="stylesheet" type="text/css" href="js/lib/codemirror/addon/hint/show-hint.css">
+        <link rel="stylesheet" type="text/css" href="./js/lib/jquery-ui/themes/jquery-ui.min.css">
         <link rel="stylesheet" type="text/css" href="css/app.css">
         <script src="./js/lib/jquery/jquery.js"></script>
         <script src="./js/lib/codemirror/codemirror.js"></script>
@@ -41,6 +42,7 @@
         <script src="./js/lib/codemirror/mode/clike/clike.js"></script>
         <script src="./js/lib/codemirror/mode/php/php.js"></script>
         <script src="./js/lib/codemirror/mode/gherkin/gherkin.js"></script>
+        <script src="./js/lib/jquery-ui/jquery-ui.min.js"></script>
         <title>win-behat</title>
     </head>
     <body>
@@ -55,7 +57,7 @@
             </ul>
         </div>
         <div>
-            <div id="directory-tree" class="custom-scrollbar" ng-controller="directoryTreeController" resize-window style="height: {{menuHeight}}px;}}">
+            <div id="directory-tree" class="custom-scrollbar" ng-controller="directoryTreeController" resizable>
                 <div>
                     <input id="dir-dialog" type="file" nwworkingdir="{{lastDirectory}}" style="display:none" nwdirectory onchange="angular.element(this).scope().openDirectory(this);" />
                 </div>
@@ -86,14 +88,14 @@
                     <li><a ng-click="showSnippets()">未定義のスニペットを表示</a></li>
                 </ul>
             </div>
-            <div id='editor-area' ng-controller="textEditorController">
+            <div id='editor-area' ng-controller="textEditorController" style="left:{{editorLeft}}px">
                 <div class="tabbable"> 
                     <ul id="editor-tabs" class="nav nav-tabs"> 
                         <li ng-repeat="file in editFilelist" ng-class="{active:file.isSelected}">
                             <a ng-click="select($index)" ng-class="isBold(file)" title="{{file.file.path()}}">{{file.file.name}}<button class="close" title="閉じる" type="submit" ng-click="close($index)">x</button></a> 
                         </li> 
                     </ul> 
-                    <div class="tab-content"><textarea ui-codemirror="editorOptions" ng-model="editFile.text" resize-window style="height: {{editorHeight}}px; width: {{windowWidth-240}}px"></textarea></div> 
+                    <div class="tab-content"><textarea ui-codemirror="editorOptions" ng-model="editFile.text" resize-window style="height: {{editorHeight}}px; width: {{editorWidth}}px"></textarea></div> 
                 </div>
             </div>
         </div>
