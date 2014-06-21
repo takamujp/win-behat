@@ -114,6 +114,8 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
             $scope.codeMirror.doc.history.done.pop();
             removeLastHistory(); // 削除したら監視解除
         });
+        
+        $scope.codeMirror.focus();
     };
     
     $scope.$on('selectAlreadyOpenFile', function(event, id) {

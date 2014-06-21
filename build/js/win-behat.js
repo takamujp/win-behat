@@ -597,6 +597,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         $scope.codeMirror.doc.history.done.pop();
         removeLastHistory();  // 削除したら監視解除
       });
+      $scope.codeMirror.focus();
     };
     $scope.$on('selectAlreadyOpenFile', function (event, id) {
       $scope.select(id);
