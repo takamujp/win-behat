@@ -37,7 +37,7 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
             $scope.codeMirror = cm;
             
             cm.on('focus', function () {
-                $scope.editFile.file.path && $scope.editFile.file.path() && highlighService.highlight($scope.editFile.file.path());
+                $scope.editFile.file && $scope.editFile.file.path && $scope.editFile.file.path() && highlighService.highlight($scope.editFile.file.path());
             });
         }
     };
@@ -84,7 +84,7 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
         }
         
         // ハイライト
-        highlighService.highlight(selected.file.path());
+        selected.file && selected.file.path && highlighService.highlight(selected.file.path());
         
         window.dispatchEvent(new Event('changeTab'));
         $scope.editFile = selected;

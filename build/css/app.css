@@ -95,6 +95,11 @@ body {
     max-width: 100%;
 }
 
+
+.modal-body > center > table td {
+    padding: 2px;
+}
+
 /*bootstrap拡張*/
 .modal-content {
     background: #424242;
@@ -137,11 +142,6 @@ input {
 
 .highlight {
     background-color: gray !important;
-}
-
-.menu-checkbox {
-    position: absolute;
-    left: 0px;
 }
 
 /*スクロールバー*/

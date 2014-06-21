@@ -1,15 +1,17 @@
 
-angular.module('winbehat').controller('menuController', function ($scope, $rootScope) {
+angular.module('winbehat').controller('menuController', function ($scope, $rootScope, modalService) {
     var CATEGORY = {
         FILE: 'ファイル',
-        BEHAT: 'behat'
+        BEHAT: 'behat',
+        HELP: 'ヘルプ'
     };
     
     var ACTION = {
         OPEN_PROJECT: 'プロジェクトを開く',
         RUN: '実行',
         STOP_ON_FAILURE: 'behat実行(エラー時中止)',
-        SNIPPETS: '未定義のスニペットを表示'
+        SNIPPETS: '未定義のスニペットを表示',
+        SHORTCUT: 'ショートカット確認'
     };
     
     $scope.menuItems = [
@@ -25,6 +27,12 @@ angular.module('winbehat').controller('menuController', function ($scope, $rootS
                 {label: ACTION.RUN},
                 {label: ACTION.STOP_ON_FAILURE},
                 {label: ACTION.SNIPPETS}
+            ]
+        },
+        {
+            label: CATEGORY.HELP,
+            items: [
+                {label: ACTION.SHORTCUT}
             ]
         }
     ];
@@ -58,6 +66,16 @@ angular.module('winbehat').controller('menuController', function ($scope, $rootS
                     break;
                     
                 default:
+                    break;
+            }
+        }
+        
+        if (category == CATEGORY.HELP) {
+            switch (action) {
+                case ACTION.SHORTCUT:
+                    modalService.openModal('template/modal/shortcut.html', true, {
+                        title: 'ショートカット一覧'
+                    });
                     break;
             }
         }

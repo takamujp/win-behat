@@ -410,16 +410,19 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
 ]);angular.module('winbehat').controller('menuController', [
   '$scope',
   '$rootScope',
-  function ($scope, $rootScope) {
+  'modalService',
+  function ($scope, $rootScope, modalService) {
     var CATEGORY = {
         FILE: '\u30d5\u30a1\u30a4\u30eb',
-        BEHAT: 'behat'
+        BEHAT: 'behat',
+        HELP: '\u30d8\u30eb\u30d7'
       };
     var ACTION = {
         OPEN_PROJECT: '\u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u3092\u958b\u304f',
         RUN: '\u5b9f\u884c',
         STOP_ON_FAILURE: 'behat\u5b9f\u884c(\u30a8\u30e9\u30fc\u6642\u4e2d\u6b62)',
-        SNIPPETS: '\u672a\u5b9a\u7fa9\u306e\u30b9\u30cb\u30da\u30c3\u30c8\u3092\u8868\u793a'
+        SNIPPETS: '\u672a\u5b9a\u7fa9\u306e\u30b9\u30cb\u30da\u30c3\u30c8\u3092\u8868\u793a',
+        SHORTCUT: '\u30b7\u30e7\u30fc\u30c8\u30ab\u30c3\u30c8\u78ba\u8a8d'
       };
     $scope.menuItems = [
       {
@@ -433,6 +436,10 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
           { label: ACTION.STOP_ON_FAILURE },
           { label: ACTION.SNIPPETS }
         ]
+      },
+      {
+        label: CATEGORY.HELP,
+        items: [{ label: ACTION.SHORTCUT }]
       }
     ];
     $scope.clickItem = function (category, action) {
@@ -462,6 +469,13 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
           });
           break;
         default:
+          break;
+        }
+      }
+      if (category == CATEGORY.HELP) {
+        switch (action) {
+        case ACTION.SHORTCUT:
+          modalService.openModal('template/modal/shortcut.html', true, { title: '\u30b7\u30e7\u30fc\u30c8\u30ab\u30c3\u30c8\u4e00\u89a7' });
           break;
         }
       }
@@ -521,7 +535,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       onLoad: function (cm) {
         $scope.codeMirror = cm;
         cm.on('focus', function () {
-          $scope.editFile.file.path && $scope.editFile.file.path() && highlighService.highlight($scope.editFile.file.path());
+          $scope.editFile.file && $scope.editFile.file.path && $scope.editFile.file.path() && highlighService.highlight($scope.editFile.file.path());
         });
       }
     };
@@ -558,7 +572,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         return;
       }
       // ハイライト
-      highlighService.highlight(selected.file.path());
+      selected.file && selected.file.path && highlighService.highlight(selected.file.path());
       window.dispatchEvent(new Event('changeTab'));
       $scope.editFile = selected;
       // modeによってCodeMirrorのオプションを切り替える
