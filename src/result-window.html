@@ -1,5 +1,5 @@
 <html ng-app='behatResult' lang="ja">
-    <head>
+    <head ng-controller="titleController">
         <meta charset="utf-8">
         <link rel="stylesheet" type="text/css" href="js/lib/bootstrap/bootstrap.css">
         <script src="js/lib/jquery/jquery.js"></script>
@@ -9,7 +9,7 @@
         <script src="js/lib/angular-ui-codemirror/ui-codemirror.js"></script>
         <script src="js/lib/angular-bootstrap/ui-bootstrap-tpls.js"></script>
         <!--<script src="js/win-behat.js"></script>-->
-        <title>behatResult</title>
+        <title>{{title}}</title>
     </head>
     <body style='overflow-y: hidden'>
         <div id="result-area" ng-controller="resultWindowController">
@@ -29,8 +29,6 @@
         (function () {
             var app = angular.module('behatResult', ['ui.bootstrap']);
             app.factory('rModalService',function($modal){var openModal=function(template,backdrop,params){return $modal.open({templateUrl:template,controller:function($scope,$modalInstance,params){$scope.params=params||{};$scope.init&&$scope.init($scope);$scope.ok=params.ok||function(){$modalInstance.close(params)};$scope.yes=params.yes||function(){$modalInstance.close({selected:'ok',params:params})};$scope.no=params.no||function(){$modalInstance.close({selected:'no',params:params})};$scope.cancel=params.cancel||function(){$modalInstance.dismiss('cancel')}},backdrop:backdrop||false,resolve:{params:function(){return params}}})};return{openModal:openModal}});
-    //        app.factory('behatService',function(){var fs=require('fs'),behat=require('./js/my-modules/behat'),TMP_PATH='tmp/',PROHIBITED_CHARACTER=/[\\\/\:\*\?"<>\|]/g;behat.saveHtmlResults=function(project_dir,features,callback){behat.run(project_dir,'-f html',features,function(err,stdout,stderr){var filename='';if(err&&!stdout){err.message=stderr||err.message;callback(err);return}filename=TMP_PATH+(project_dir+features+'.html').replace(PROHIBITED_CHARACTER,'');fs.open('build/'+filename,'w','0777',function(err,fd){if(err){fs.unlink('build/'+filename,function(err){});callback(err);return}fs.write(fd,new Buffer(stdout),0,Buffer.byteLength(stdout),function(err){fs.close(fd);if(err){fs.unlink('build/'+filename,function(err){});callback(err);return}callback(null,filename)})})})};return behat});
-    //        app.factory("behatService",["$window","modalService",function(a,b){var c=require("fs"),d=require("./js/my-modules/behat"),e=require("nw.gui"),f="tmp/",g=/[\\\/\:\*\?"<>\|]/g,h=function(b){var c=a.open("","_blank");$(c.document.body).html(b)};return d.saveHtmlResults=function(a,b,e,h){e instanceof Array?e.push("-f html"):e="-f html",d.run(a,e,b,function(d,e,i){var j="";return d&&!e?(d.message=i||d.message,void h(d)):(j=f+(a+b+".html").replace(g,""),void c.open("build/"+j,"w","0777",function(a,b){return a?(c.unlink("build/"+j,function(){}),void h(a)):void c.write(b,new Buffer(e),0,Buffer.byteLength(e),function(a){return c.close(b),a?(c.unlink("build/"+j,function(){}),void h(a)):void h(null,j)})}))})},d.showHtmlResults=function(f,g,h){d.saveHtmlResults(f,g,h,function(d,i){if(d)return void b.openModal("template/modal/error.html",!0,{title:"behat実行エラー",message:d.message});var j="?params="+encodeURIComponent(JSON.stringify({project:f,features:g,filepath:i,options:h})),k=e.Window.get(a.open("result-window.html"+j));k.on("closed",function(){k=null,c.unlink("build/"+i,function(){})}),e.Window.get().on("closed",function(){k&&c.unlink("build/"+i,function(){k.close()})})})},d.showSnippets=function(a,c){d.run(a,"-f snippets",c,function(a,c,d){return a&&!c?void b.openModal("template/modal/error.html",!0,{title:"behat実行エラー",message:d||a.message}):void(c.replace(/[\n|\r]/g,"")?h("<pre>"+c+"</pre>"):b.openModal("template/modal/error.html",!0,{title:"ステップ表示エラー",message:"未定義のステップはありませんでした"}))})},d}])
             app.factory("rBehatService",function(){var e=require("fs"),t=require("./js/my-modules/behat"),n=require("nw.gui"),r="tmp/",i=/[\\\/\:\*\?"<>\|]/g;t.rSaveHtmlResults=function(n,s,o,u){if(o instanceof Array){o.push("-f html")}else{o="-f html"}t.run(n,o,s,function(t,o,a){var f="";if(t&&!o){t.message=a||t.message;u(t);return}f=r+(n+s+".html").replace(i,"");e.open("build/"+f,"w","0777",function(t,n){if(t){e.unlink("build/"+f,function(e){});u(t);return}e.write(n,new Buffer(o),0,Buffer.byteLength(o),function(t){e.close(n);if(t){e.unlink("build/"+f,function(e){});u(t);return}u(null,f)})})})};return t});
             app.controller('resultWindowController', function ($scope, rModalService, rBehatService) {
                 var json = decodeURIComponent(location.search.replace(/^\?params=/, '')),
@@ -41,7 +39,7 @@
                     options = params.options;
 
                 $scope.resultPath = filepath;
-
+                
                 $scope.retry = function () {
                     rBehatService.rSaveHtmlResults(project, features, options, function (err, filepath) {
                         if (err) {
@@ -55,6 +53,14 @@
                         location.reload();
                     });
                 };
+            });
+            
+            app.controller('titleController', function ($scope) {
+                var json = decodeURIComponent(location.search.replace(/^\?params=/, '')),
+                    params = JSON.parse(json),
+                    features = params.features;
+                    
+                $scope.title = features.split('\\').pop();
             });
         })();
     </script>
