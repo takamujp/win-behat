@@ -893,6 +893,31 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     var _openBlankWindow = function (message) {
       var win = $window.open('', '_blank');
       $(win.document.body).html(message);
+      _appendCloseWindowShortCut(win);
+    };
+    /**
+     * windowを閉じるショートカットを付与する
+     * 
+     * @param {window} win
+     */
+    var _appendCloseWindowShortCut = function (win) {
+      win.onkeydown = function (e) {
+        if (e.keyCode == 17) {
+          this.pressCtrl = true;
+        } else if (e.keyCode == 87) {
+          this.pressW = true;
+        }
+        if (this.pressCtrl && this.pressW) {
+          this.close();
+        }
+      };
+      win.onkeyup = function (e) {
+        if (e.keyCode == 17) {
+          this.pressCtrl = false;
+        } else if (e.keyCode == 87) {
+          this.pressW = false;
+        }
+      };
     };
     /**
      * behatを実行し、その結果をファイルに保存する

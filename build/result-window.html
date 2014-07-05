@@ -62,6 +62,34 @@
                     
                 $scope.title = features.split('\\').pop();
             });
+            
+            
+            window.onkeydown = function (e) {
+                if (e.keyCode == 17) {
+                    this.pressCtrl = true;
+                } else if (e.keyCode == 87) {
+                    this.pressW = true;
+                }
+
+                if (this.pressCtrl && this.pressW) {
+                    this.close();
+                }
+            };
+
+            window.onkeyup = function (e) {
+                if (e.keyCode == 17) {
+                    this.pressCtrl = false;
+                } else if (e.keyCode == 87) {
+                    this.pressW = false;
+                }
+            };
+
+            var iframe = $('iframe')[0];
+            iframe.onload = function () {
+
+                iframe.contentWindow.onkeydown = window.onkeydown.bind(window);
+                iframe.contentWindow.onkeyup = window.onkeyup.bind(window);
+            };
         })();
     </script>
 </html>
