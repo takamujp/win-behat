@@ -959,6 +959,11 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
   var fxl = require('./js/my-modules/filename-extension-list');
   var fs = require('fs');
   var path = require('path');
+  var mode = CodeMirror.modes.gherkin();
+  mode.lineComment = '#';
+  CodeMirror.defineMode('gherkin', function () {
+    return mode;
+  });
   /**
      * タブを挿入する
      * 

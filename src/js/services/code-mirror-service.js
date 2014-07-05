@@ -5,6 +5,10 @@ angular.module('winbehat').factory('codeMirrorService', function () {
     var fs = require('fs');
     var path = require('path');
     
+    var mode = CodeMirror.modes.gherkin();
+    mode.lineComment = '#';
+    CodeMirror.defineMode('gherkin', function () { return mode;});
+    
     /**
      * タブを挿入する
      * 
