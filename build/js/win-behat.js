@@ -530,6 +530,14 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         },
         'Shift-Ctrl-W': function () {
           $scope.closeAll();
+        },
+        'Ctrl-Tab': function () {
+          _switchNextTab();
+          $scope.$apply();
+        },
+        'Shift-Ctrl-Tab': function () {
+          _switchPrevTab();
+          $scope.$apply();
         }
       },
       onLoad: function (cm) {
@@ -705,6 +713,42 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         return;
       }
       behatService.showSnippets($scope.editFile.file.path().split('features')[0], $scope.editFile.file.path());
+    };
+    /**
+     * 前のタブに切り替える
+     */
+    var _switchPrevTab = function () {
+      if ($scope.editFilelist.length <= 1) {
+        return;
+      }
+      ;
+      var id = editFilelistService.getId($scope.editFile.file.path());
+      if (id < 0) {
+        return;
+      } else if (id == 0) {
+        id = $scope.editFilelist.length - 1;
+      } else {
+        id--;
+      }
+      $scope.select(id);
+    };
+    /**
+     * 次のタブに切り替える
+     */
+    var _switchNextTab = function () {
+      if ($scope.editFilelist.length <= 1) {
+        return;
+      }
+      ;
+      var id = editFilelistService.getId($scope.editFile.file.path());
+      if (id < 0) {
+        return;
+      } else if (id == $scope.editFilelist.length - 1) {
+        id = 0;
+      } else {
+        id++;
+      }
+      $scope.select(id);
     };
   }
 ]);;angular.module('winbehat').directive('context', [
