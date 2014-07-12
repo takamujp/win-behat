@@ -36,17 +36,23 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     /**
      * ディレクトリの階層情報を読み込む
      * 
-     * @param {object} element
+     * @param {object|string} element
      */
     $scope.openDirectory = function (element) {
-      if (!element.files[0]) {
+      var dirPath = '';
+      if (typeof element == 'string') {
+        dirPath = element;
+      } else if (element.files[0]) {
+        dirPath = element.files[0].path;
+      }
+      if (!dirPath) {
         return;
       }
       $scope.hasFilelist = false;
       $scope.hasFeatures = false;
       // ディレクトリ直下のファイルの一覧を取得する
-      filelistService.read(element.files[0].path, null, function (filelist) {
-        var i = 0, len = 0, hasFeatures = false, modalInstance = null;
+      filelistService.read(dirPath, null, function (filelist) {
+        var i = 0, len = 0, hasFeatures = false, modalInstance = null, dirHistory = null;
         if (filelist) {
           for (i = 0, len = filelist.children.length; i < len; i++) {
             if (filelist.children[i].name == 'features') {
@@ -61,8 +67,14 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
               $scope.hasFilelist = true;
               $scope.hasFeatures = true;
             });
-            $scope.lastDirectory = element.files[0].path;
-            $window.localStorage.setItem('lastDirectory', element.files[0].path);
+            $scope.lastDirectory = dirPath;
+            $window.localStorage.setItem('lastDirectory', dirPath);
+            dirHistory = JSON.parse($window.localStorage.getItem('directoryHistory') || '[]');
+            dirHistory.unshift(dirPath);
+            dirHistory = dirHistory.filter(function (x, i, self) {
+              return self.indexOf(x) === i;
+            });
+            $window.localStorage.setItem('directoryHistory', JSON.stringify(dirHistory));
             codeMirrorService.initBehatHint(path.join(filelist.path(), 'features\\bootstrap'));
           }  // 存在しない場合
           else {
@@ -406,12 +418,19 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     $scope.explorer = function () {
       exec('explorer ' + $scope.contextTarget.file.path());
     };
+    /**
+     * behat実行(イベントが発行されたら)
+     */
+    $scope.$on('openDirectory', function (event, title) {
+      $scope.openDirectory(title);
+    });
   }
 ]);angular.module('winbehat').controller('menuController', [
   '$scope',
   '$rootScope',
+  '$window',
   'modalService',
-  function ($scope, $rootScope, modalService) {
+  function ($scope, $rootScope, $window, modalService) {
     var CATEGORY = {
         FILE: '\u30d5\u30a1\u30a4\u30eb',
         BEHAT: 'behat',
@@ -442,7 +461,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         items: [{ label: ACTION.SHORTCUT }]
       }
     ];
-    $scope.clickItem = function (category, action) {
+    $scope.clickItem = function (category, action, title) {
       if (category == CATEGORY.FILE) {
         switch (action) {
         case ACTION.OPEN_PROJECT:
@@ -451,7 +470,9 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
           }, 0);
           break;
         default:
+          $rootScope.$broadcast('openDirectory', title);
           break;
+          _updateDirecotryHistory();
         }
       }
       if (category == CATEGORY.BEHAT) {
@@ -480,6 +501,17 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         }
       }
     };
+    var _updateDirecotryHistory = function () {
+      var dirHistory = JSON.parse($window.localStorage.getItem('directoryHistory') || '[]');
+      $scope.menuItems[0].items.length = 1;
+      for (var i = 0, len = dirHistory.length; i < len; i++) {
+        $scope.menuItems[0].items.push({
+          label: dirHistory[i].split('\\').pop() + '\u3092\u958b\u304f',
+          title: dirHistory[i]
+        });
+      }
+    };
+    _updateDirecotryHistory();
   }
 ]);angular.module('winbehat').controller('textEditorController', [
   '$scope',

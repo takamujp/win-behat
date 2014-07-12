@@ -51,7 +51,7 @@
                 <li class="dropdown" ng-repeat="category in menuItems">
                     <a class="dropdown-toggle" role="button" data-toggle="dropdown">{{category.label}}<b class="caret"></b></a>
                     <ul class="dropdown-menu" role="menu">
-                        <li role="presentation" ng-repeat="item in category.items"><a role="menuitem" ng-click="clickItem(category.label, item.label)" tabindex="-1">{{item.label}}</a></li>
+                        <li role="presentation" ng-repeat="item in category.items"><a role="menuitem" ng-click="clickItem(category.label, item.label, item.title)" title="{{item.title}}" tabindex="-1">{{item.label}}</a></li>
                     </ul>
                 </li>
             </ul>

@@ -1,5 +1,5 @@
 
-angular.module('winbehat').controller('menuController', function ($scope, $rootScope, modalService) {
+angular.module('winbehat').controller('menuController', function ($scope, $rootScope, $window, modalService) {
     var CATEGORY = {
         FILE: 'ファイル',
         BEHAT: 'behat',
@@ -37,7 +37,7 @@ angular.module('winbehat').controller('menuController', function ($scope, $rootS
         }
     ];
     
-    $scope.clickItem = function (category, action) {
+    $scope.clickItem = function (category, action, title) {
         
         if (category == CATEGORY.FILE) {
             switch (action) {
@@ -47,7 +47,11 @@ angular.module('winbehat').controller('menuController', function ($scope, $rootS
                     }, 0);
                     break;
                 default:
+                    
+                    $rootScope.$broadcast('openDirectory', title);
                     break;
+                    
+                _updateDirecotryHistory();
             }
         }
         
@@ -80,4 +84,16 @@ angular.module('winbehat').controller('menuController', function ($scope, $rootS
             }
         }
     };
+    
+    var _updateDirecotryHistory = function () {
+        
+        var dirHistory = JSON.parse($window.localStorage.getItem('directoryHistory') || '[]');
+        
+        $scope.menuItems[0].items.length = 1;
+        for (var i = 0, len = dirHistory.length; i < len; i++) {
+            $scope.menuItems[0].items.push({label: dirHistory[i].split('\\').pop() + 'を開く', title: dirHistory[i]});
+        }
+    };
+    
+    _updateDirecotryHistory();
 });

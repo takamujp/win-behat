@@ -12,11 +12,18 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
     /**
      * ディレクトリの階層情報を読み込む
      * 
-     * @param {object} element
+     * @param {object|string} element
      */
     $scope.openDirectory = function (element) {
+        var dirPath = '';
         
-        if (!element.files[0]) {
+        if (typeof element == 'string') {
+            dirPath = element;
+        } else if(element.files[0]) {
+            dirPath = element.files[0].path;
+        }
+        
+        if (!dirPath) {
             return;
         }
         
@@ -24,11 +31,12 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
         $scope.hasFeatures = false;
         
         // ディレクトリ直下のファイルの一覧を取得する
-        filelistService.read(element.files[0].path, null, function (filelist) {
+        filelistService.read(dirPath, null, function (filelist) {
             var i = 0, 
                 len = 0,
                 hasFeatures = false,
-                modalInstance = null;
+                modalInstance = null,
+                dirHistory = null;
 
             if (filelist) {
                 for (i = 0, len = filelist.children.length; i < len; i++) {
@@ -46,8 +54,15 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                         $scope.hasFeatures = true;
                     });
                     
-                    $scope.lastDirectory = element.files[0].path;
-                    $window.localStorage.setItem('lastDirectory', element.files[0].path);
+                    $scope.lastDirectory = dirPath;
+                    $window.localStorage.setItem('lastDirectory', dirPath);
+                    
+                    dirHistory = JSON.parse($window.localStorage.getItem('directoryHistory') || '[]');
+                    dirHistory.unshift(dirPath);
+                    dirHistory = dirHistory.filter(function (x, i, self) {
+                        return self.indexOf(x) === i;
+                    });
+                    $window.localStorage.setItem('directoryHistory', JSON.stringify(dirHistory));
                     codeMirrorService.initBehatHint(path.join(filelist.path(), 'features\\bootstrap'));
                 } 
                 // 存在しない場合
@@ -453,5 +468,12 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
     $scope.explorer  = function () {
         exec('explorer ' + $scope.contextTarget.file.path());
     };
+    
+    /**
+     * behat実行(イベントが発行されたら)
+     */
+    $scope.$on('openDirectory', function(event, title) {
+        $scope.openDirectory(title);
+    });
     
 });
