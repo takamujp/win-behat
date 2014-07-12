@@ -62,7 +62,11 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                     dirHistory = dirHistory.filter(function (x, i, self) {
                         return self.indexOf(x) === i;
                     });
+                    if (dirHistory.length > 5) {
+                        dirHistory.pop();
+                    }
                     $window.localStorage.setItem('directoryHistory', JSON.stringify(dirHistory));
+                    $rootScope.$broadcast('updateDirecotryHistory');
                     codeMirrorService.initBehatHint(path.join(filelist.path(), 'features\\bootstrap'));
                 } 
                 // 存在しない場合

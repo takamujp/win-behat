@@ -47,11 +47,8 @@ angular.module('winbehat').controller('menuController', function ($scope, $rootS
                     }, 0);
                     break;
                 default:
-                    
                     $rootScope.$broadcast('openDirectory', title);
                     break;
-                    
-                _updateDirecotryHistory();
             }
         }
         
@@ -96,4 +93,9 @@ angular.module('winbehat').controller('menuController', function ($scope, $rootS
     };
     
     _updateDirecotryHistory();
+    
+    $scope.$on('updateDirecotryHistory', function() {
+        _updateDirecotryHistory();
+        $scope.$apply();
+    });
 });
