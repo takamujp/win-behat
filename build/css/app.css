@@ -9,7 +9,7 @@ body {
 /*ディレクトリツリー*/
 #directory-tree {
     float: left;
-    height: 100%;
+    height: 95%;
     width: 240px;
     overflow: scroll;
 }
@@ -56,7 +56,7 @@ body {
 }
 
 #directory-tree-root > ul {
-    height: 100%;
+    /*height: 100%;*/
 }
 
 #directory-tree span, #directory-tree pre , #menu-bar a, .dropdown-menu a {

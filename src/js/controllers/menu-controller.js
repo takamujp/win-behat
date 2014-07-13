@@ -21,14 +21,14 @@ angular.module('winbehat').controller('menuController', function ($scope, $rootS
                 {label: ACTION.OPEN_PROJECT}
             ]
         },
-        {
-            label: CATEGORY.BEHAT,
-            items: [
-                {label: ACTION.RUN},
-                {label: ACTION.STOP_ON_FAILURE},
-                {label: ACTION.SNIPPETS}
-            ]
-        },
+//        {
+//            label: CATEGORY.BEHAT,
+//            items: [
+//                {label: ACTION.RUN},
+//                {label: ACTION.STOP_ON_FAILURE},
+//                {label: ACTION.SNIPPETS}
+//            ]
+//        },
         {
             label: CATEGORY.HELP,
             items: [

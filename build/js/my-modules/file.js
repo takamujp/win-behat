@@ -12,7 +12,16 @@ function File (name, parent) {
     this.isOpen = false;
     
     if (this.parent) {
-        this.parent.children.push(this);
+        var arleadyExists = false;
+        for (var i = 0, len = this.parent.children.length; i < len; i++) {
+            if (this.parent.children[i].name.toUpperCase() == name.toUpperCase()) {
+                arleadyExists = true;
+                break;
+            }
+        }
+        if (!arleadyExists) {
+            this.parent.children.push(this);
+        }
     }
 }
 

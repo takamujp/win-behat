@@ -63,7 +63,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
           // featuresディレクトリが存在するならそのまま、ツリーに表示させる
           if (hasFeatures) {
             $scope.$apply(function () {
-              $scope.filelist = filelist;
+              $scope.filelist[filelist.name] = filelist;
               $scope.hasFilelist = true;
               $scope.hasFeatures = true;
             });
@@ -74,7 +74,11 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
             dirHistory = dirHistory.filter(function (x, i, self) {
               return self.indexOf(x) === i;
             });
+            if (dirHistory.length > 5) {
+              dirHistory.pop();
+            }
             $window.localStorage.setItem('directoryHistory', JSON.stringify(dirHistory));
+            $rootScope.$broadcast('updateDirecotryHistory');
             codeMirrorService.initBehatHint(path.join(filelist.path(), 'features\\bootstrap'));
           }  // 存在しない場合
           else {
@@ -97,6 +101,9 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
                   }
                   $scope.openDirectory(element);
                 });
+              } else if (Object.keys($scope.filelist).length) {
+                $scope.hasFilelist = true;
+                $scope.hasFeatures = true;
               }
             });
           }
@@ -147,7 +154,8 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
      * @param {object} directory
      */
     var _readDirectory = function (directory) {
-      filelistService.read(directory.path(), null, function (filelist) {
+      filelistService.read(directory.name, directory.parent, function (filelist) {
+        //        filelistService.read(directory.path(), null, function (filelist) {
         $scope.$apply(function () {
           if (filelist) {
             directory.children = filelist.children;
@@ -312,7 +320,14 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       if (!$scope.hasFeatures) {
         return;
       }
-      behatService.showHtmlResults($scope.filelist.name, features, options);
+      var parent = '';
+      for (var name in $scope.filelist) {
+        if (features.toUpperCase() == name.toUpperCase() || features.toUpperCase().split(name.toUpperCase() + '\\').length > 1) {
+          parent = name;
+          break;
+        }
+      }
+      behatService.showHtmlResults(parent, features, options, parent.split('\\').pop());
     };
     /**
      * behat実行(contextメニューから)
@@ -336,7 +351,14 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       if (!$scope.hasFeatures) {
         return;
       }
-      behatService.showSnippets($scope.filelist.name, features);
+      var parent = '';
+      for (var name in $scope.filelist) {
+        if (features.toUpperCase() == name.toUpperCase() || features.toUpperCase().split(name.toUpperCase() + '\\').length > 1) {
+          parent = name;
+          break;
+        }
+      }
+      behatService.showSnippets(parent, features);
     };
     /**
      * 未定義のステップを表示する(contextメニューから)
@@ -449,14 +471,6 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         items: [{ label: ACTION.OPEN_PROJECT }]
       },
       {
-        label: CATEGORY.BEHAT,
-        items: [
-          { label: ACTION.RUN },
-          { label: ACTION.STOP_ON_FAILURE },
-          { label: ACTION.SNIPPETS }
-        ]
-      },
-      {
         label: CATEGORY.HELP,
         items: [{ label: ACTION.SHORTCUT }]
       }
@@ -472,7 +486,6 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
         default:
           $rootScope.$broadcast('openDirectory', title);
           break;
-          _updateDirecotryHistory();
         }
       }
       if (category == CATEGORY.BEHAT) {
@@ -512,6 +525,10 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       }
     };
     _updateDirecotryHistory();
+    $scope.$on('updateDirecotryHistory', function () {
+      _updateDirecotryHistory();
+      $scope.$apply();
+    });
   }
 ]);angular.module('winbehat').controller('textEditorController', [
   '$scope',
@@ -735,7 +752,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       if (!$scope.editFile.file.path()) {
         return;
       }
-      behatService.showHtmlResults($scope.editFile.file.path().split('features')[0], $scope.editFile.file.path(), options);
+      behatService.showHtmlResults($scope.editFile.file.path().split('features')[0], $scope.editFile.file.path(), options, $scope.editFile.root.split('\\').pop());
     };
     /**
      * 編集中のファイルのスニペットを表示する
@@ -999,8 +1016,9 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
      * @param {string} project_dir　behatを実行するディレクトリ
      * @param {string} features 実行対象のfeatureファイルのパス・featureファイルのディレクトリのパス
      * @param {Array} options behatコマンドのオプション
+     * @param {string} project_name プロジェクト名
      */
-    behat.showHtmlResults = function (project_dir, features, options) {
+    behat.showHtmlResults = function (project_dir, features, options, project_name) {
       behat.saveHtmlResults(project_dir, features, options, function (err, filepath) {
         if (err) {
           modalService.openModal('template/modal/error.html', true, {
@@ -1013,7 +1031,8 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
             project: project_dir,
             features: features,
             filepath: filepath,
-            options: options
+            options: options,
+            project_name: project_name
           })), win = gui.Window.get($window.open('result-window.html' + query));
         win.on('closed', function () {
           win = null;
@@ -1260,7 +1279,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
 });angular.module('winbehat').factory('editFilelistService', function () {
   var fs = require('fs'), path = require('path'), extList = require('./js/my-modules/filename-extension-list'), list = [];
   var push = function (file) {
-    var filePath = file.path(), text = '', i = 0, len = list.length;
+    var filePath = file.path(), text = '', i = 0, len = list.length, parent = file, root = '';
     for (; i < len; i++) {
       if (list[i].file.path() === filePath) {
         return i;
@@ -1270,6 +1289,9 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     if (!fs.existsSync(filePath)) {
       return new Error(filePath + ' not found.');
     }
+    while (parent = parent.parent) {
+      root = parent.path();
+    }
     text = file.readSync();
     list.push({
       file: file,
@@ -1277,6 +1299,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       text: text,
       lastText: '',
       history: null,
+      root: root,
       mode: extList[path.extname(filePath).split('.').pop()],
       save: function (callback) {
         file.write(this.text, function (err) {

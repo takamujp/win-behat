@@ -62,7 +62,13 @@
                     <input id="dir-dialog" type="file" nwworkingdir="{{lastDirectory}}" style="display:none" nwdirectory onchange="angular.element(this).scope().openDirectory(this);" />
                 </div>
                 <div id="directory-tree-root" ng-if="hasFilelist">
-                    <dirctory-tree-node file="filelist" context="directory-context"></dirctory-tree-node>
+                    <!--<dirctory-tree-node ng-repeat="project in filelist" file="project" context="directory-context"></dirctory-tree-node>-->
+                    <ul>
+                        <li ng-repeat="project in filelist">
+                            <div title="{{project.name}}">{{project.name.split("\\").pop()}}</div>
+                            <dirctory-tree-node file="project" context="directory-context"></dirctory-tree-node>
+                        </li>
+                    </ul>
                 </div>
                 
                 <ul id="file-context" class="dropdown-menu">
@@ -92,7 +98,7 @@
                 <div class="tabbable"> 
                     <ul id="editor-tabs" class="nav nav-tabs"> 
                         <li ng-repeat="file in editFilelist" ng-class="{active:file.isSelected}">
-                            <a ng-click="select($index)" ng-class="isBold(file)" title="{{file.file.path()}}">{{file.file.name}}<button class="close" title="閉じる" type="submit" ng-click="close($index)">x</button></a> 
+                            <a ng-click="select($index)" ng-class="isBold(file)" title="{{file.file.path()}}">{{file.file.name}}[{{file.root.split("\\").pop()}}]<button class="close" title="閉じる" type="submit" ng-click="close($index)">x</button></a> 
                         </li> 
                     </ul> 
                     <div class="tab-content"><textarea ui-codemirror="editorOptions" ng-model="editFile.text" resize-window style="height: {{editorHeight}}px; width: {{editorWidth}}px"></textarea></div> 

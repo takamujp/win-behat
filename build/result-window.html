@@ -58,9 +58,10 @@
             app.controller('titleController', function ($scope) {
                 var json = decodeURIComponent(location.search.replace(/^\?params=/, '')),
                     params = JSON.parse(json),
-                    features = params.features;
+                    features = params.features,
+                    project_name = params.project_name;
                     
-                $scope.title = features.split('\\').pop();
+                $scope.title = features.split('\\').pop() + '[' + project_name + ']';
             });
             
             

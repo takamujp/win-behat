@@ -102,8 +102,9 @@ angular.module('winbehat').factory('behatService', function ($window, modalServi
      * @param {string} project_dir　behatを実行するディレクトリ
      * @param {string} features 実行対象のfeatureファイルのパス・featureファイルのディレクトリのパス
      * @param {Array} options behatコマンドのオプション
+     * @param {string} project_name プロジェクト名
      */
-    behat.showHtmlResults = function (project_dir, features, options) {
+    behat.showHtmlResults = function (project_dir, features, options, project_name) {
         behat.saveHtmlResults(project_dir, features, options, function (err, filepath) {
             if (err) {
                 modalService.openModal('template/modal/error.html', true, {
@@ -113,7 +114,7 @@ angular.module('winbehat').factory('behatService', function ($window, modalServi
                 return;
             }
             
-            var query = '?params=' + encodeURIComponent(JSON.stringify({project:project_dir, features:features, filepath:filepath, options: options})),
+            var query = '?params=' + encodeURIComponent(JSON.stringify({project:project_dir, features:features, filepath:filepath, options: options, project_name: project_name})),
                 win = gui.Window.get($window.open('result-window.html' + query));
 
             win.on('closed', function () {

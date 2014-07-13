@@ -235,7 +235,7 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
             return;
         }
         
-        behatService.showHtmlResults($scope.editFile.file.path().split('features')[0], $scope.editFile.file.path(), options);
+        behatService.showHtmlResults($scope.editFile.file.path().split('features')[0], $scope.editFile.file.path(), options, $scope.editFile.root.split("\\").pop());
     };
     
     /**

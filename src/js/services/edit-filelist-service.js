@@ -10,7 +10,9 @@ angular.module('winbehat').factory('editFilelistService', function () {
         var filePath = file.path(),
             text = '',
             i = 0,
-            len = list.length;
+            len = list.length,
+            parent = file,
+            root = '';
         
         for (; i < len; i++) {
             if (list[i].file.path() === filePath) {
@@ -23,6 +25,10 @@ angular.module('winbehat').factory('editFilelistService', function () {
             return new Error(filePath + ' not found.');
         }
 
+        while (parent = parent.parent) {
+            root = parent.path();
+        }
+
         text = file.readSync();
         list.push({
             file: file,
@@ -30,6 +36,7 @@ angular.module('winbehat').factory('editFilelistService', function () {
             text: text,
             lastText: '',
             history: null,
+            root: root,
             mode: extList[path.extname(filePath).split('.').pop()],
             save: function (callback) {
                 file.write(this.text, function (err) {

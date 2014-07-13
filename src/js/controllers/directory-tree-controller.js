@@ -49,7 +49,7 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                 // featuresディレクトリが存在するならそのまま、ツリーに表示させる
                 if (hasFeatures) {
                     $scope.$apply(function () {
-                        $scope.filelist = filelist;
+                        $scope.filelist[filelist.name] = filelist;
                         $scope.hasFilelist = true;
                         $scope.hasFeatures = true;
                     });
@@ -90,7 +90,10 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
                                 }
                                 $scope.openDirectory(element);
                             });
-                        } 
+                        } else if (Object.keys($scope.filelist).length){
+                            $scope.hasFilelist = true;
+                            $scope.hasFeatures = true;
+                        }
                     });
                 }
             }
@@ -148,7 +151,8 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
      * @param {object} directory
      */
     var _readDirectory = function (directory) {
-        filelistService.read(directory.path(), null, function (filelist) {
+        filelistService.read(directory.name, directory.parent, function (filelist) {
+//        filelistService.read(directory.path(), null, function (filelist) {
             $scope.$apply(function () {
                 if (filelist) {
                     directory.children = filelist.children;
@@ -339,7 +343,16 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
             return;
         }
         
-        behatService.showHtmlResults($scope.filelist.name, features, options);
+        var parent = '';
+        
+        for (var name in $scope.filelist) {
+            if (features.toUpperCase() == name.toUpperCase() || features.toUpperCase().split(name.toUpperCase() + "\\").length > 1) {
+                parent = name;
+                break;
+            }
+        }
+        
+        behatService.showHtmlResults(parent, features, options, parent.split("\\").pop());
     };
     
     /**
@@ -368,7 +381,16 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
             return;
         }
         
-        behatService.showSnippets($scope.filelist.name, features);
+        var parent = '';
+        
+        for (var name in $scope.filelist) {
+            if (features.toUpperCase() == name.toUpperCase() || features.toUpperCase().split(name.toUpperCase() + "\\").length > 1) {
+                parent = name;
+                break;
+            }
+        }
+        
+        behatService.showSnippets(parent, features);
     };
     
     /**
