@@ -172,10 +172,11 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
      * @returns {object} ng-class用オブジェクト
      */
     $scope.getIconClass = function (element) {
+      var target = element.item || element.project;
       return {
-        'icon-expand-directory': element.item.isDirectory() && element.item.isShow,
-        'icon-contract-directory': element.item.isDirectory() && !element.item.isShow,
-        'icon-file': !element.item.isDirectory(),
+        'icon-expand-directory': target.isDirectory() && target.isShow,
+        'icon-contract-directory': target.isDirectory() && !target.isShow,
+        'icon-file': !target.isDirectory(),
         'tree-icon': true
       };
     };
@@ -446,6 +447,35 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
     $scope.$on('openDirectory', function (event, title) {
       $scope.openDirectory(title);
     });
+    /**
+     * ツリーの要素のプロジェクト名をクリックした時の動作
+     * 
+     * @param {object} element
+     */
+    $scope.clickProject = function (element) {
+      element.project.isShow = !element.project.isShow;
+    };
+    /**
+     * プロジェクトを閉じる
+     * 
+     * @param {object} element
+     */
+    $scope.closeProject = function (element) {
+      var modalInstance = null;
+      modalInstance = modalService.openModal('template/modal/confirm.html', false, {
+        'yesLabel': '\u306f\u3044',
+        'noLabel': '\u3044\u3044\u3048',
+        'hideCancel': true,
+        'title': '\u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u3092\u9589\u3058\u308b',
+        'message': element.project.name.split('\\').pop() + '\u3092\u9589\u3058\u307e\u3059\u304b\uff1f'
+      });
+      modalInstance.result.then(function (result) {
+        if (result.selected == 'ok') {
+          $rootScope.$broadcast('closeProject', element.project.name);
+          delete element.filelist[element.project.name];
+        }
+      });
+    };
   }
 ]);angular.module('winbehat').controller('menuController', [
   '$scope',
@@ -668,8 +698,9 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
      * ファイルを閉じる
      * 
      * @param {number} index
+     * @param {boolean} [hideCancel=null]
      */
-    $scope.close = function (index) {
+    $scope.close = function (index, hideCancel) {
       var modalInstance = null,
         // 保存直後に編集中のファイルを閉じようとすると、何故か$scope.editFile.textが空の文字列になる場合があるので、その場合はcodeMirrorの現在の値と比較するようにする
         text = $scope.editFilelist[index] == $scope.editFile ? $scope.codeMirror.getValue() : $scope.editFilelist[index].text, close = function () {
@@ -683,6 +714,7 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
           'yesLabel': '\u4fdd\u5b58\u3057\u3066\u9589\u3058\u308b',
           'noLabel': '\u4fdd\u5b58\u305b\u305a\u306b\u9589\u3058\u308b',
           'cancelLabel': '\u30ad\u30e3\u30f3\u30bb\u30eb',
+          'hideCancel': hideCancel,
           'title': '\u4fdd\u5b58\u306e\u78ba\u8a8d',
           'message': $scope.editFilelist[index].file.name + '\u306f\u5909\u66f4\u3055\u308c\u3066\u3044\u307e\u3059\u3002\u4fdd\u5b58\u3057\u307e\u3059\u304b\uff1f'
         });
@@ -799,6 +831,20 @@ angular.module('winbehat', ['ui.codemirror', 'ui.bootstrap']);;angular.module('w
       }
       $scope.select(id);
     };
+    $scope.$on('closeProject', function (event, projectName) {
+      var pathList = [], i = 0, id = 0, len = $scope.editFilelist.length;
+      for (; i < len; i++) {
+        if ($scope.editFilelist[i].root == projectName) {
+          pathList.push($scope.editFilelist[i].file.path());
+        }
+      }
+      for (i = 0; i < len; i++) {
+        id = editFilelistService.getId(pathList[i]);
+        if (id >= 0) {
+          $scope.close(id, true);
+        }
+      }
+    });
   }
 ]);;angular.module('winbehat').directive('context', [
   'highlighService',

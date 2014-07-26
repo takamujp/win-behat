@@ -65,8 +65,8 @@
                     <!--<dirctory-tree-node ng-repeat="project in filelist" file="project" context="directory-context"></dirctory-tree-node>-->
                     <ul>
                         <li ng-repeat="project in filelist">
-                            <div title="{{project.name}}">{{project.name.split("\\").pop()}}</div>
-                            <dirctory-tree-node file="project" context="directory-context"></dirctory-tree-node>
+                            <button class="close project-close" title="閉じる" type="submit" ng-click="closeProject(this)">x</button><div class="project" ng-click="clickProject(this, $index)" title="{{project.name}}"><span ng-class="getIconClass(this)"></span>{{project.name.split("\\").pop()}}</div>
+                            <dirctory-tree-node ng-show="project.isShow" file="project" context="directory-context"></dirctory-tree-node>
                         </li>
                     </ul>
                 </div>

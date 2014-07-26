@@ -59,8 +59,13 @@ body {
     /*height: 100%;*/
 }
 
-#directory-tree span, #directory-tree pre , #menu-bar a, .dropdown-menu a {
+#directory-tree span, #directory-tree pre , #menu-bar a, .dropdown-menu a, .project {
     cursor: context-menu;
+}
+
+.project-close {
+    clear: both;
+    float: left;
 }
 
 /*エディター*/

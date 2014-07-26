@@ -170,10 +170,11 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
      * @returns {object} ng-class用オブジェクト
      */
     $scope.getIconClass = function (element) {
+        var target = element.item || element.project;
         return {
-            'icon-expand-directory': element.item.isDirectory() && element.item.isShow,
-            'icon-contract-directory': element.item.isDirectory() && !element.item.isShow,
-            'icon-file': !element.item.isDirectory(),
+            'icon-expand-directory': target.isDirectory() && target.isShow,
+            'icon-contract-directory': target.isDirectory() && !target.isShow,
+            'icon-file': !target.isDirectory(),
             'tree-icon': true
         };
     };
@@ -502,4 +503,35 @@ angular.module('winbehat').controller('directoryTreeController', function ($scop
         $scope.openDirectory(title);
     });
     
+    /**
+     * ツリーの要素のプロジェクト名をクリックした時の動作
+     * 
+     * @param {object} element
+     */
+    $scope.clickProject= function (element) {
+        element.project.isShow = !element.project.isShow;
+    };
+    
+    /**
+     * プロジェクトを閉じる
+     * 
+     * @param {object} element
+     */
+    $scope.closeProject = function (element) {
+        var modalInstance = null;
+        
+        modalInstance = modalService.openModal('template/modal/confirm.html', false, {
+            'yesLabel': 'はい',
+            'noLabel': 'いいえ',
+            'hideCancel': true,
+            'title': 'プロジェクトを閉じる',
+            'message': element.project.name.split("\\").pop() + 'を閉じますか？'
+        });
+        modalInstance.result.then(function (result) {
+            if (result.selected == 'ok') {
+                $rootScope.$broadcast('closeProject', element.project.name);
+                delete element.filelist[element.project.name];
+            } 
+        });
+    };
 });

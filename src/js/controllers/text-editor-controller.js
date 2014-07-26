@@ -134,8 +134,9 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
      * ファイルを閉じる
      * 
      * @param {number} index
+     * @param {boolean} [hideCancel=null]
      */
-    $scope.close = function (index) {
+    $scope.close = function (index, hideCancel) {
         
         var modalInstance = null,
             // 保存直後に編集中のファイルを閉じようとすると、何故か$scope.editFile.textが空の文字列になる場合があるので、その場合はcodeMirrorの現在の値と比較するようにする
@@ -153,6 +154,7 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
                 'yesLabel': '保存して閉じる',
                 'noLabel': '保存せずに閉じる',
                 'cancelLabel': 'キャンセル',
+                'hideCancel': hideCancel,
                 'title': '保存の確認',
                 'message': $scope.editFilelist[index].file.name + 'は変更されています。保存しますか？'
             });
@@ -290,4 +292,24 @@ angular.module('winbehat').controller('textEditorController', function ($scope, 
         
         $scope.select(id);
     };
+    
+    $scope.$on('closeProject', function (event, projectName) {
+        var pathList = [],
+            i = 0,
+            id = 0,
+            len = $scope.editFilelist.length;
+    
+        for (; i < len; i++) {
+            if ($scope.editFilelist[i].root == projectName) {
+                pathList.push($scope.editFilelist[i].file.path());
+            }
+        }
+        
+        for (i = 0; i < len; i++) {
+            id = editFilelistService.getId(pathList[i]);
+            if (id >= 0) {
+                $scope.close(id, true);
+            }
+        }
+    });
 });
